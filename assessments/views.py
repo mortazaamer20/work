@@ -180,7 +180,7 @@ def _save_clinic_records(request, assessment, clinics):
                             total_max += 1.0
                         else:
                             total_score += val
-                            total_max += float(field.max_score) if field.max_score else 5.0
+                            total_max += 5.0 if field.field_type == "rating" else (10.0 if field.field_type == "rating10" else 100.0)
                     except (ValueError, TypeError):
                         pass
 

@@ -60,21 +60,21 @@ class DailyAssessment(models.Model):
 
     @property
     def behavioral_score(self):
-        score = Decimal("0")
+        score = 0.0
         if self.attendance in ("on_time",):
-            score += Decimal("30")
+            score += 30
         elif self.attendance == "late":
-            score += Decimal("15")
-        score += Decimal(str(self.interaction_level)) * Decimal("8")
+            score += 15
+        score += float(self.interaction_level) * 8
         if self.mood == "stable":
-            score += Decimal("20")
+            score += 20
         elif self.mood in ("anxious", "sad", "withdrawn"):
-            score += Decimal("10")
+            score += 10
         if self.appearance == "excellent":
-            score += Decimal("10")
+            score += 10
         elif self.appearance == "good":
-            score += Decimal("5")
-        return min(score, Decimal("100"))
+            score += 5
+        return min(score, 100.0)
 
 
 class ActivityRecord(models.Model):
