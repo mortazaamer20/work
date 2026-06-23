@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}{{ title }}{% endblock %}
-{% block page_title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% if center %} - {{ center.name }}{% endif %}{% endblock %}
 {% block nav_centers %}active{% endblock %}
 {% block content %}
 <form method="post">
@@ -10,42 +10,48 @@
         <div class="card-body">
             <div class="form-grid">
                 {% for field in form %}
+                {% if field.name != "center" %}
                 <div class="form-group">
                     <label>{{ field.label }}</label>
                     {{ field }}
                     {{ field.errors }}
                 </div>
+                {% endif %}
                 {% endfor %}
             </div>
+            {{ form.center.as_hidden }}
         </div>
     </div>
 
     <div class="card">
-        <div class="card-header"><h2>حقول التقييم</h2></div>
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+            <h2>حقول التقييم</h2>
+            <button type="button" id="add-field" class="btn btn-outline btn-sm"><i class="bi bi-plus-lg"></i> إضافة حقل</button>
+        </div>
         <div class="card-body">
             {{ formset.management_form }}
-            {% for f in formset %}
-            <div class="formset-row">
-                {% if f.instance.pk %}{{ f.DELETE.as_hidden }}{% endif %}
-                <div class="form-grid">
-                    {% for field in f %}
-                    {% if field.name != "DELETE" %}
-                    <div class="form-group">
-                        <label>{{ field.label }}</label>
-                        {{ field }}
-                        {{ field.errors }}
+            {{ formset.non_form_errors }}
+            <div id="field-rows">
+                {% for f in formset %}
+                <div class="formset-row field-row">
+                    {{ f.id }}
+                    <div class="form-grid">
+                        {% for field in f %}
+                        {% if field.name != "DELETE" and field.name != "id" %}
+                        <div class="form-group"{% if field.name == "choices_text" %} data-show-for="choice"{% endif %}>
+                            <label>{{ field.label }}</label>
+                            {{ field }}
+                            {{ field.errors }}
+                        </div>
+                        {% endif %}
+                        {% endfor %}
                     </div>
-                    {% endif %}
-                    {% endfor %}
+                    <label class="del-field-label" style="color:var(--danger);font-size:0.8rem;margin-top:8px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                        {{ f.DELETE }} حذف هذا الحقل
+                    </label>
                 </div>
-                {% if f.instance.pk %}
-                <label style="color:var(--danger);font-size:0.8rem;margin-top:8px;display:flex;align-items:center;gap:4px;cursor:pointer;">
-                    {{ f.DELETE }} حذف هذا الحقل
-                </label>
-                {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
-            {{ formset.errors }}
         </div>
     </div>
 
@@ -53,9 +59,55 @@
         <div class="card-body">
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> حفظ</button>
-                <a href="{% url 'centers:activity_list' activity.center.pk %}" class="btn btn-outline">إلغاء</a>
+                <a href="{% url 'centers:activity_list' center.pk %}" class="btn btn-outline">إلغاء</a>
             </div>
         </div>
     </div>
 </form>
+
+<template id="empty-field-form">
+    <div class="formset-row field-row">
+        <div class="form-grid">
+            {% for field in formset.empty_form %}
+            {% if field.name != "DELETE" and field.name != "id" %}
+            <div class="form-group"{% if field.name == "choices_text" %} data-show-for="choice"{% endif %}>
+                <label>{{ field.label }}</label>
+                {{ field }}
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <label class="del-field-label" style="color:var(--danger);font-size:0.8rem;margin-top:8px;display:none;"></label>
+    </div>
+</template>
+{% endblock %}
+{% block extra_js %}
+<script>
+function setupFieldRow(row) {
+    var typeSel = row.querySelector('[name$="-field_type"]');
+    if (!typeSel) return;
+    function toggle() {
+        var t = typeSel.value;
+        row.querySelectorAll('[data-show-for]').forEach(function(grp) {
+            var allowed = grp.getAttribute('data-show-for').split(',');
+            grp.style.display = (allowed.indexOf(t) === -1) ? 'none' : '';
+        });
+    }
+    typeSel.addEventListener('change', toggle);
+    toggle();
+}
+document.querySelectorAll('#field-rows .field-row').forEach(setupFieldRow);
+
+document.getElementById('add-field').addEventListener('click', function() {
+    var total = document.getElementById('id_fields-TOTAL_FORMS');
+    var idx = parseInt(total.value, 10);
+    var html = document.getElementById('empty-field-form').innerHTML.replace(/__prefix__/g, idx);
+    var temp = document.createElement('div');
+    temp.innerHTML = html.trim();
+    var row = temp.firstElementChild;
+    document.getElementById('field-rows').appendChild(row);
+    total.value = idx + 1;
+    setupFieldRow(row);
+});
+</script>
 {% endblock %}

@@ -78,52 +78,64 @@
 
 {% if activity_records %}
 <div class="card" style="margin-bottom:20px;">
-    <div class="card-header"><h2>سجلات الأنشطة</h2></div>
-    <div class="table-container">
-        <table>
-            <thead><tr><th>المركز</th><th>النشاط</th><th>النتيجة</th><th>ملاحظات</th></tr></thead>
-            <tbody>
-            {% for rec in activity_records %}
-            <tr>
-                <td>{{ rec.activity.center.name }}</td>
-                <td><strong>{{ rec.activity.name }}</strong></td>
-                <td>
+    <div class="card-header"><h2>سجلات الأنشطة ({{ activity_records|length }})</h2></div>
+    <div class="card-body">
+        {% for rec in activity_records %}
+        <div class="record-block">
+            <div class="record-head">
+                <div>
+                    <strong>{{ rec.activity.name }}</strong>
+                    <span class="record-center">{{ rec.activity.center.name }}</span>
+                </div>
+                <div style="text-align:left;min-width:110px;">
                     <strong>{{ rec.score }}%</strong>
-                    <div class="progress-bar" style="width:80px;margin-top:4px;">
+                    <div class="progress-bar" style="width:90px;margin-top:4px;">
                         <div class="fill {% if rec.score >= 60 %}green{% elif rec.score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ rec.score }}%;"></div>
                     </div>
-                </td>
-                <td>{{ rec.notes|default:"—" }}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </div>
+            </div>
+            {% if rec.detail_items %}
+            <div class="record-items">
+                {% for item in rec.detail_items %}
+                <div class="record-item"><span class="ri-label">{{ item.label }}</span><span class="ri-value">{{ item.value }}</span></div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if rec.notes %}<div class="record-notes"><i class="bi bi-chat-left-text"></i> {{ rec.notes }}</div>{% endif %}
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endif %}
 
 {% if clinic_records %}
 <div class="card">
-    <div class="card-header"><h2>سجلات العيادات</h2></div>
-    <div class="table-container">
-        <table>
-            <thead><tr><th>المركز</th><th>العيادة</th><th>النتيجة</th><th>ملاحظات</th></tr></thead>
-            <tbody>
-            {% for rec in clinic_records %}
-            <tr>
-                <td>{{ rec.clinic.center.name }}</td>
-                <td><strong>{{ rec.clinic.name }}</strong></td>
-                <td>
+    <div class="card-header"><h2>سجلات العيادات ({{ clinic_records|length }})</h2></div>
+    <div class="card-body">
+        {% for rec in clinic_records %}
+        <div class="record-block">
+            <div class="record-head">
+                <div>
+                    <strong>{{ rec.clinic.name }}</strong>
+                    <span class="record-center">{{ rec.clinic.center.name }}</span>
+                </div>
+                <div style="text-align:left;min-width:110px;">
                     <strong>{{ rec.score }}%</strong>
-                    <div class="progress-bar" style="width:80px;margin-top:4px;">
+                    <div class="progress-bar" style="width:90px;margin-top:4px;">
                         <div class="fill {% if rec.score >= 60 %}green{% elif rec.score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ rec.score }}%;"></div>
                     </div>
-                </td>
-                <td>{{ rec.notes|default:"—" }}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+                </div>
+            </div>
+            {% if rec.detail_items %}
+            <div class="record-items">
+                {% for item in rec.detail_items %}
+                <div class="record-item"><span class="ri-label">{{ item.label }}</span><span class="ri-value">{{ item.value }}{% if item.unit %} {{ item.unit }}{% endif %}</span></div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% if rec.notes %}<div class="record-notes"><i class="bi bi-chat-left-text"></i> {{ rec.notes }}</div>{% endif %}
+        </div>
+        {% endfor %}
     </div>
 </div>
 {% endif %}

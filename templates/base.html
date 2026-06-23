@@ -116,6 +116,75 @@ document.querySelectorAll('.accordion-header').forEach(function(h) {
         if (icon) icon.classList.toggle('bi-chevron-up');
     });
 });
+
+// Searchable select: merges a search box with the dropdown in the same field
+function makeSearchable(select) {
+    if (select.dataset.ssReady) return;
+    select.dataset.ssReady = "1";
+    var wrap = document.createElement('div');
+    wrap.className = 'ss-wrap';
+    select.parentNode.insertBefore(wrap, select);
+    wrap.appendChild(select);
+    select.style.display = 'none';
+
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'form-input ss-input';
+    input.placeholder = select.getAttribute('data-placeholder') || 'ابحث أو اختر...';
+    input.autocomplete = 'off';
+    var list = document.createElement('div');
+    list.className = 'ss-list';
+    wrap.appendChild(input);
+    wrap.appendChild(list);
+
+    function render(filter) {
+        list.innerHTML = '';
+        var f = (filter || '').toLowerCase();
+        var count = 0;
+        Array.prototype.forEach.call(select.options, function(opt) {
+            if (!opt.value) return;
+            if (f && opt.text.toLowerCase().indexOf(f) === -1) return;
+            count++;
+            var item = document.createElement('div');
+            item.className = 'ss-item';
+            item.textContent = opt.text;
+            if (opt.value === select.value) item.classList.add('selected');
+            item.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                select.value = opt.value;
+                input.value = opt.text;
+                list.classList.remove('open');
+                select.dispatchEvent(new Event('change'));
+            });
+            list.appendChild(item);
+        });
+        if (count === 0) {
+            var empty = document.createElement('div');
+            empty.className = 'ss-empty';
+            empty.textContent = 'لا توجد نتائج';
+            list.appendChild(empty);
+        }
+    }
+
+    if (select.value && select.selectedIndex >= 0) {
+        input.value = select.options[select.selectedIndex].text;
+    }
+    input.addEventListener('focus', function() { render(''); list.classList.add('open'); });
+    input.addEventListener('input', function() { render(input.value); list.classList.add('open'); });
+    document.addEventListener('click', function(e) {
+        if (!wrap.contains(e.target)) {
+            list.classList.remove('open');
+            // restore label if user typed garbage without selecting
+            if (select.value && select.selectedIndex >= 0) {
+                input.value = select.options[select.selectedIndex].text;
+            } else {
+                input.value = '';
+            }
+        }
+    });
+}
+document.querySelectorAll('select.searchable').forEach(makeSearchable);
+
 </script>
 {% block extra_js %}{% endblock %}
 </body>

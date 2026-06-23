@@ -8,7 +8,7 @@
         <form method="get" action="{% url 'reports:individual' %}">
             <div class="form-group">
                 <label>اختر المستفيد</label>
-                <select name="beneficiary" class="form-select" required>
+                <select name="beneficiary" class="form-select searchable" data-placeholder="ابحث باسم المستفيد أو رقمه..." required>
                     <option value="">-- اختر مستفيداً --</option>
                     {% for b in beneficiaries %}
                     <option value="{{ b.pk }}">{{ b.ref_number }} - {{ b.full_name }}</option>

@@ -152,4 +152,35 @@
         </div>
     </div>
 </form>
+{% if editing %}
+<script id="existing-activity-data" type="application/json">{{ existing_activity_data|safe }}</script>
+<script id="existing-clinic-data" type="application/json">{{ existing_clinic_data|safe }}</script>
+<script>
+(function() {
+    function setVal(name, value) {
+        var el = document.querySelector('[name="' + name + '"]');
+        if (!el) return;
+        el.value = value;
+    }
+    function populate(jsonId, prefix) {
+        var node = document.getElementById(jsonId);
+        if (!node) return;
+        var data;
+        try { data = JSON.parse(node.textContent); } catch (e) { return; }
+        Object.keys(data).forEach(function(pk) {
+            var fields = data[pk];
+            Object.keys(fields).forEach(function(key) {
+                if (key === "__notes__") {
+                    setVal(prefix + "_" + pk + "_notes", fields[key]);
+                } else {
+                    setVal(prefix + "_" + pk + "_" + key, fields[key]);
+                }
+            });
+        });
+    }
+    populate("existing-activity-data", "activity");
+    populate("existing-clinic-data", "clinic");
+})();
+</script>
+{% endif %}
 {% endblock %}

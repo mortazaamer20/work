@@ -72,11 +72,15 @@ def assessment_edit(request, pk):
 
     existing_activity_data = {}
     for rec in assessment.activity_records.all():
-        existing_activity_data[rec.activity_id] = rec.data
+        data = dict(rec.data or {})
+        data["__notes__"] = rec.notes or ""
+        existing_activity_data[rec.activity_id] = data
 
     existing_clinic_data = {}
     for rec in assessment.clinic_records.all():
-        existing_clinic_data[rec.clinic_id] = rec.data
+        data = dict(rec.data or {})
+        data["__notes__"] = rec.notes or ""
+        existing_clinic_data[rec.clinic_id] = data
 
     if request.method == "POST" and form.is_valid():
         form.save()
@@ -107,8 +111,30 @@ def assessment_detail(request, pk):
         DailyAssessment.objects.select_related("beneficiary", "assessed_by", "rehab_index"),
         pk=pk
     )
-    activity_records = assessment.activity_records.select_related("activity__center").all()
-    clinic_records = assessment.clinic_records.select_related("clinic__center").all()
+    activity_records = list(
+        assessment.activity_records.select_related("activity__center").prefetch_related("activity__fields").all()
+    )
+    clinic_records = list(
+        assessment.clinic_records.select_related("clinic__center").prefetch_related("clinic__fields").all()
+    )
+
+    # Build a readable (label, value) breakdown of the stored JSON data per record
+    for rec in activity_records:
+        labels = {f.field_key: f.name for f in rec.activity.fields.all()}
+        rec.detail_items = [
+            {"label": labels.get(k, k), "value": v}
+            for k, v in (rec.data or {}).items()
+        ]
+    for rec in clinic_records:
+        field_map = {f.field_key: f for f in rec.clinic.fields.all()}
+        items = []
+        for k, v in (rec.data or {}).items():
+            f = field_map.get(k)
+            label = f.name if f else k
+            unit = f.unit if f and f.unit else ""
+            items.append({"label": label, "value": v, "unit": unit})
+        rec.detail_items = items
+
     return render(request, "assessments/assessment_detail.html", {
         "assessment": assessment, "activity_records": activity_records, "clinic_records": clinic_records
     })

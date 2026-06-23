@@ -7,7 +7,7 @@ class DailyAssessmentForm(forms.ModelForm):
         model = DailyAssessment
         fields = ["beneficiary", "date", "attendance", "interaction_level", "mood", "appearance", "notes"]
         widgets = {
-            "beneficiary": forms.Select(attrs={"class": "form-select"}),
+            "beneficiary": forms.Select(attrs={"class": "form-select searchable", "data-placeholder": "ابحث باسم المستفيد أو رقمه..."}),
             "date": forms.DateInput(attrs={"class": "form-input", "type": "date"}),
             "attendance": forms.Select(attrs={"class": "form-select"}),
             "interaction_level": forms.Select(attrs={"class": "form-select"}),

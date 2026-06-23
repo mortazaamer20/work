@@ -49,8 +49,16 @@
         <div class="card-header"><h2>آخر التقييمات</h2></div>
         <div class="card-body">
             {% if assessments %}
+            <div class="legend-box">
+                <div><strong>المؤشر:</strong> النسبة الكلية لمؤشر التأهيل اليومي (0-100%) محسوبة من المحاور الأربعة (الطبي 40%، السلوكي 20%، المهاري 20%، الاجتماعي 20%).</div>
+                <div style="margin-top:6px;display:flex;gap:14px;flex-wrap:wrap;">
+                    <span><span class="badge badge-success">تقدّم</span> 60% فأكثر</span>
+                    <span><span class="badge badge-warning">ثابت</span> 40-59%</span>
+                    <span><span class="badge badge-danger">تراجع</span> أقل من 40%</span>
+                </div>
+            </div>
             <table>
-                <thead><tr><th>التاريخ</th><th>المؤشر</th><th>الحالة</th><th></th></tr></thead>
+                <thead><tr><th>التاريخ</th><th>المؤشر الكلي</th><th>الحالة</th><th></th></tr></thead>
                 <tbody>
                 {% for a in assessments %}
                 <tr>

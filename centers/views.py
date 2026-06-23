@@ -54,13 +54,21 @@ def activity_list(request, center_pk):
 @require_perm("activities", "add")
 def activity_create(request, center_pk):
     center = get_object_or_404(Center, pk=center_pk)
+    FieldFormSet = inlineformset_factory(
+        Activity, ActivityField, form=ActivityFieldForm, extra=3, can_delete=True
+    )
     form = ActivityForm(request.POST or None, initial={"center": center})
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "تم إنشاء النشاط")
+    formset = FieldFormSet(request.POST or None, prefix="fields")
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        activity = form.save()
+        formset.instance = activity
+        formset.save()
+        messages.success(request, "تم إنشاء النشاط وحقوله")
         return redirect("centers:activity_list", center_pk=center.pk)
     form.fields["center"].initial = center
-    return render(request, "centers/activity_form.html", {"form": form, "center": center, "title": "إضافة نشاط"})
+    return render(request, "centers/activity_edit.html", {
+        "form": form, "formset": formset, "center": center, "activity": None, "title": "إضافة نشاط"
+    })
 
 
 @require_perm("activities", "edit")
@@ -77,7 +85,7 @@ def activity_edit(request, pk):
         messages.success(request, "تم تحديث النشاط وحقوله")
         return redirect("centers:activity_list", center_pk=activity.center.pk)
     return render(request, "centers/activity_edit.html", {
-        "form": form, "formset": formset, "activity": activity, "title": "تعديل النشاط وحقوله"
+        "form": form, "formset": formset, "activity": activity, "center": activity.center, "title": "تعديل النشاط وحقوله"
     })
 
 
@@ -102,13 +110,21 @@ def clinic_list(request, center_pk):
 @require_perm("clinics", "add")
 def clinic_create(request, center_pk):
     center = get_object_or_404(Center, pk=center_pk)
+    FieldFormSet = inlineformset_factory(
+        Clinic, ClinicField, form=ClinicFieldForm, extra=3, can_delete=True
+    )
     form = ClinicForm(request.POST or None, initial={"center": center})
-    if request.method == "POST" and form.is_valid():
-        form.save()
-        messages.success(request, "تم إنشاء العيادة")
+    formset = FieldFormSet(request.POST or None, prefix="fields")
+    if request.method == "POST" and form.is_valid() and formset.is_valid():
+        clinic = form.save()
+        formset.instance = clinic
+        formset.save()
+        messages.success(request, "تم إنشاء العيادة وحقولها")
         return redirect("centers:clinic_list", center_pk=center.pk)
     form.fields["center"].initial = center
-    return render(request, "centers/clinic_form.html", {"form": form, "center": center, "title": "إضافة عيادة"})
+    return render(request, "centers/clinic_edit.html", {
+        "form": form, "formset": formset, "center": center, "clinic": None, "title": "إضافة عيادة"
+    })
 
 
 @require_perm("clinics", "edit")
@@ -125,7 +141,7 @@ def clinic_edit(request, pk):
         messages.success(request, "تم تحديث العيادة وحقولها")
         return redirect("centers:clinic_list", center_pk=clinic.center.pk)
     return render(request, "centers/clinic_edit.html", {
-        "form": form, "formset": formset, "clinic": clinic, "title": "تعديل العيادة وحقولها"
+        "form": form, "formset": formset, "clinic": clinic, "center": clinic.center, "title": "تعديل العيادة وحقولها"
     })
 
 
