@@ -7,8 +7,8 @@ class Center(models.Model):
     description = models.TextField("الوصف", blank=True)
     icon = models.CharField("الأيقونة", max_length=50, default="bi-building")
     color = models.CharField("اللون", max_length=7, default="#0d6efd")
-    weight = models.DecimalField(
-        "الوزن في مؤشر التأهيل", max_digits=5, decimal_places=2, default=0,
+    weight = models.FloatField(
+        "الوزن في مؤشر التأهيل", default=0,
         help_text="النسبة المئوية لوزن هذا المركز في حساب مؤشر التأهيل اليومي"
     )
     axis = models.CharField("المحور", max_length=50, choices=[
@@ -67,7 +67,7 @@ class ActivityField(models.Model):
     field_type = models.CharField("نوع الحقل", max_length=20, choices=FIELD_TYPES)
     choices_text = models.TextField("الخيارات", blank=True, help_text="خيار واحد في كل سطر (لنوع الاختيار)")
     is_required = models.BooleanField("مطلوب", default=True)
-    max_score = models.DecimalField("الدرجة القصوى", max_digits=5, decimal_places=2, default=5)
+    max_score = models.FloatField("الدرجة القصوى", default=5)
     order = models.PositiveIntegerField("الترتيب", default=0)
 
     class Meta:
@@ -113,8 +113,8 @@ class ClinicField(models.Model):
     choices_text = models.TextField("الخيارات", blank=True, help_text="خيار واحد في كل سطر")
     is_required = models.BooleanField("مطلوب", default=True)
     unit = models.CharField("الوحدة", max_length=50, blank=True, help_text="مثل: ملم زئبق، كغم، °م")
-    normal_min = models.DecimalField("الحد الأدنى الطبيعي", max_digits=10, decimal_places=2, null=True, blank=True)
-    normal_max = models.DecimalField("الحد الأعلى الطبيعي", max_digits=10, decimal_places=2, null=True, blank=True)
+    normal_min = models.FloatField("الحد الأدنى الطبيعي", null=True, blank=True)
+    normal_max = models.FloatField("الحد الأعلى الطبيعي", null=True, blank=True)
     order = models.PositiveIntegerField("الترتيب", default=0)
 
     class Meta:

@@ -1,6 +1,5 @@
 from django.db import models
 from django.conf import settings
-from decimal import Decimal, ROUND_HALF_UP
 
 
 class DailyAssessment(models.Model):
@@ -88,8 +87,8 @@ class ActivityRecord(models.Model):
         verbose_name="النشاط", related_name="records"
     )
     data = models.JSONField("البيانات", default=dict)
-    score = models.DecimalField("الدرجة", max_digits=5, decimal_places=2, default=0)
-    max_score = models.DecimalField("الدرجة القصوى", max_digits=5, decimal_places=2, default=100)
+    score = models.FloatField("الدرجة", default=0)
+    max_score = models.FloatField("الدرجة القصوى", default=100)
     notes = models.TextField("ملاحظات", blank=True)
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
@@ -107,12 +106,12 @@ class ActivityRecord(models.Model):
 
     @property
     def percentage(self):
-        if not self.max_score or self.max_score == 0:
-            return Decimal("0")
+        if not self.max_score:
+            return 0.0
         try:
-            return min((self.score / self.max_score) * Decimal("100"), Decimal("100"))
+            return min((self.score / self.max_score) * 100, 100.0)
         except Exception:
-            return Decimal("0")
+            return 0.0
 
 
 class ClinicRecord(models.Model):
@@ -125,8 +124,8 @@ class ClinicRecord(models.Model):
         verbose_name="العيادة", related_name="records"
     )
     data = models.JSONField("البيانات", default=dict)
-    score = models.DecimalField("الدرجة", max_digits=5, decimal_places=2, default=0)
-    max_score = models.DecimalField("الدرجة القصوى", max_digits=5, decimal_places=2, default=100)
+    score = models.FloatField("الدرجة", default=0)
+    max_score = models.FloatField("الدرجة القصوى", default=100)
     notes = models.TextField("ملاحظات", blank=True)
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
@@ -144,12 +143,12 @@ class ClinicRecord(models.Model):
 
     @property
     def percentage(self):
-        if not self.max_score or self.max_score == 0:
-            return Decimal("0")
+        if not self.max_score:
+            return 0.0
         try:
-            return min((self.score / self.max_score) * Decimal("100"), Decimal("100"))
+            return min((self.score / self.max_score) * 100, 100.0)
         except Exception:
-            return Decimal("0")
+            return 0.0
 
 
 class RehabilitationIndex(models.Model):
@@ -163,17 +162,17 @@ class RehabilitationIndex(models.Model):
         DailyAssessment, on_delete=models.CASCADE,
         verbose_name="التقييم اليومي", related_name="rehab_index"
     )
-    medical_psychological_score = models.DecimalField("الطبي والنفسي", max_digits=5, decimal_places=2, default=0)
-    behavioral_score = models.DecimalField("السلوكي والانضباطي", max_digits=5, decimal_places=2, default=0)
-    skill_technical_score = models.DecimalField("المهاري والتقني", max_digits=5, decimal_places=2, default=0)
-    social_spiritual_score = models.DecimalField("الاجتماعي والروحي", max_digits=5, decimal_places=2, default=0)
+    medical_psychological_score = models.FloatField("الطبي والنفسي", default=0)
+    behavioral_score = models.FloatField("السلوكي والانضباطي", default=0)
+    skill_technical_score = models.FloatField("المهاري والتقني", default=0)
+    social_spiritual_score = models.FloatField("الاجتماعي والروحي", default=0)
 
-    medical_weight = models.DecimalField("وزن الطبي", max_digits=5, decimal_places=2, default=40)
-    behavioral_weight = models.DecimalField("وزن السلوكي", max_digits=5, decimal_places=2, default=20)
-    skill_weight = models.DecimalField("وزن المهاري", max_digits=5, decimal_places=2, default=20)
-    social_weight = models.DecimalField("وزن الاجتماعي", max_digits=5, decimal_places=2, default=20)
+    medical_weight = models.FloatField("وزن الطبي", default=40)
+    behavioral_weight = models.FloatField("وزن السلوكي", default=20)
+    skill_weight = models.FloatField("وزن المهاري", default=20)
+    social_weight = models.FloatField("وزن الاجتماعي", default=20)
 
-    total_score = models.DecimalField("المؤشر الكلي", max_digits=5, decimal_places=2, default=0)
+    total_score = models.FloatField("المؤشر الكلي", default=0)
     status = models.CharField("الحالة", max_length=20, choices=STATUS_CHOICES, default="stable")
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -185,10 +184,6 @@ class RehabilitationIndex(models.Model):
 
     def __str__(self):
         return f"{self.assessment.beneficiary} - {self.assessment.date} - {self.total_score}%"
-
-    def _safe_decimal(self, value, max_val=Decimal("999.99")):
-        d = Decimal(str(round(value, 2)))
-        return min(max(d, Decimal("0")), max_val)
 
     def calculate(self):
         behavioral_base = self.assessment.behavioral_score
@@ -206,24 +201,22 @@ class RehabilitationIndex(models.Model):
         for rec in activity_records:
             axis = rec.activity.center.axis
             if axis in axis_scores:
-                pct = float(rec.percentage) if rec.max_score else 0
-                axis_scores[axis].append(min(pct, 100))
+                axis_scores[axis].append(min(rec.percentage, 100.0))
 
         for rec in clinic_records:
             axis = rec.clinic.center.axis
             if axis in axis_scores:
-                pct = float(rec.percentage) if rec.max_score else 0
-                axis_scores[axis].append(min(pct, 100))
+                axis_scores[axis].append(min(rec.percentage, 100.0))
 
         axis_scores["behavioral"].append(float(behavioral_base))
 
         def avg(lst):
-            return sum(lst) / len(lst) if lst else 0
+            return sum(lst) / len(lst) if lst else 0.0
 
-        self.medical_psychological_score = self._safe_decimal(avg(axis_scores["medical_psychological"]))
-        self.skill_technical_score = self._safe_decimal(avg(axis_scores["skill_technical"]))
-        self.social_spiritual_score = self._safe_decimal(avg(axis_scores["social_spiritual"]))
-        self.behavioral_score = self._safe_decimal(avg(axis_scores["behavioral"]))
+        self.medical_psychological_score = round(avg(axis_scores["medical_psychological"]), 2)
+        self.skill_technical_score = round(avg(axis_scores["skill_technical"]), 2)
+        self.social_spiritual_score = round(avg(axis_scores["social_spiritual"]), 2)
+        self.behavioral_score = round(avg(axis_scores["behavioral"]), 2)
 
         total = (
             self.medical_psychological_score * self.medical_weight / 100 +
@@ -231,7 +224,7 @@ class RehabilitationIndex(models.Model):
             self.skill_technical_score * self.skill_weight / 100 +
             self.social_spiritual_score * self.social_weight / 100
         )
-        self.total_score = total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        self.total_score = round(total, 2)
 
         if self.total_score >= 60:
             self.status = "progressing"

@@ -1,6 +1,6 @@
 import json
 from datetime import date
-from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
+
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -128,8 +128,8 @@ def _save_activity_records(request, assessment, activities):
     for activity in activities:
         prefix = f"activity_{activity.pk}_"
         data = {}
-        total_score = Decimal("0")
-        total_max = Decimal("0")
+        total_score = 0.0
+        total_max = 0.0
         has_data = False
 
         for field in activity.fields.all():
@@ -140,21 +140,18 @@ def _save_activity_records(request, assessment, activities):
                 data[field.field_key] = value
                 if field.field_type in ("rating", "rating10", "number"):
                     try:
-                        val = Decimal(value)
+                        val = float(value)
                         total_score += val
-                        total_max += field.max_score
-                    except Exception:
+                        total_max += float(field.max_score)
+                    except (ValueError, TypeError):
                         pass
 
         if has_data:
-            try:
-                score_pct = (total_score / total_max * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if total_max > 0 else Decimal("0")
-                score_pct = min(score_pct, Decimal("999.99"))
-            except (InvalidOperation, ZeroDivisionError):
-                score_pct = Decimal("0")
+            score_pct = round(total_score / total_max * 100, 2) if total_max > 0 else 0.0
+            score_pct = min(score_pct, 100.0)
             ActivityRecord.objects.create(
                 assessment=assessment, activity=activity,
-                data=data, score=score_pct, max_score=Decimal("100"),
+                data=data, score=score_pct, max_score=100,
                 notes=request.POST.get(f"activity_{activity.pk}_notes", ""),
                 recorded_by=request.user,
             )
@@ -165,8 +162,8 @@ def _save_clinic_records(request, assessment, clinics):
         prefix = f"clinic_{clinic.pk}_"
         data = {}
         has_data = False
-        total_score = Decimal("0")
-        total_max = Decimal("0")
+        total_score = 0.0
+        total_max = 0.0
 
         for field in clinic.fields.all():
             key = prefix + field.field_key
@@ -176,26 +173,23 @@ def _save_clinic_records(request, assessment, clinics):
                 data[field.field_key] = value
                 if field.field_type in ("rating", "rating10", "number"):
                     try:
-                        val = Decimal(value)
+                        val = float(value)
                         if field.normal_min is not None and field.normal_max is not None:
                             if field.normal_min <= val <= field.normal_max:
-                                total_score += Decimal("1")
-                            total_max += Decimal("1")
+                                total_score += 1.0
+                            total_max += 1.0
                         else:
                             total_score += val
-                            total_max += field.max_score if hasattr(field, "max_score") else Decimal("5")
-                    except Exception:
+                            total_max += float(field.max_score) if field.max_score else 5.0
+                    except (ValueError, TypeError):
                         pass
 
         if has_data:
-            try:
-                score_pct = (total_score / total_max * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if total_max > 0 else Decimal("50")
-                score_pct = min(score_pct, Decimal("999.99"))
-            except (InvalidOperation, ZeroDivisionError):
-                score_pct = Decimal("50")
+            score_pct = round(total_score / total_max * 100, 2) if total_max > 0 else 50.0
+            score_pct = min(score_pct, 100.0)
             ClinicRecord.objects.create(
                 assessment=assessment, clinic=clinic,
-                data=data, score=score_pct, max_score=Decimal("100"),
+                data=data, score=score_pct, max_score=100,
                 notes=request.POST.get(f"clinic_{clinic.pk}_notes", ""),
                 recorded_by=request.user,
             )
