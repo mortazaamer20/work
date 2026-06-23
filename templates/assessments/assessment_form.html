@@ -30,11 +30,11 @@
     {% regroup activities by center as center_activities %}
     {% for group in center_activities %}
     <div class="card" style="margin-bottom:20px;">
-        <div class="accordion-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.accordion-icon').classList.toggle('bi-chevron-down');this.querySelector('.accordion-icon').classList.toggle('bi-chevron-up');">
-            <span><i class="bi bi-building" style="color:var(--primary);margin-left:8px;"></i><strong>{{ group.grouper.name }}</strong> - الأنشطة</span>
-            <i class="bi bi-chevron-down accordion-icon"></i>
+        <div class="accordion-header" onclick="var body=this.nextElementSibling;body.classList.toggle('open');var icon=this.querySelector('.accordion-icon');icon.classList.toggle('bi-chevron-down');icon.classList.toggle('bi-chevron-up');">
+            <span><i class="bi bi-building" style="color:var(--primary);margin-left:8px;"></i><strong>{{ group.grouper.name }}</strong> - الأنشطة ({{ group.list|length }})</span>
+            <i class="bi bi-chevron-up accordion-icon"></i>
         </div>
-        <div class="accordion-body">
+        <div class="accordion-body open">
             {% for activity in group.list %}
             <div style="margin-bottom:16px;padding:12px;background:var(--gray-50);border-radius:8px;">
                 <h4 style="margin-bottom:10px;color:var(--gray-700);">{{ activity.name }}</h4>
@@ -55,7 +55,8 @@
                         {% elif field.field_type == "rating10" %}
                         <select name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-select">
                             <option value="">-- اختر --</option>
-                            {% for i in "12345678910" %}<option value="{{ forloop.counter }}">{{ forloop.counter }}</option>{% endfor %}
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+                            <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
                         </select>
                         {% elif field.field_type == "boolean" %}
                         <select name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-select">
@@ -90,11 +91,11 @@
     {% regroup clinics by center as center_clinics %}
     {% for group in center_clinics %}
     <div class="card" style="margin-bottom:20px;">
-        <div class="accordion-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.accordion-icon').classList.toggle('bi-chevron-down');this.querySelector('.accordion-icon').classList.toggle('bi-chevron-up');">
-            <span><i class="bi bi-hospital" style="color:var(--success);margin-left:8px;"></i><strong>{{ group.grouper.name }}</strong> - العيادات</span>
-            <i class="bi bi-chevron-down accordion-icon"></i>
+        <div class="accordion-header" onclick="var body=this.nextElementSibling;body.classList.toggle('open');var icon=this.querySelector('.accordion-icon');icon.classList.toggle('bi-chevron-down');icon.classList.toggle('bi-chevron-up');">
+            <span><i class="bi bi-hospital" style="color:var(--success);margin-left:8px;"></i><strong>{{ group.grouper.name }}</strong> - العيادات ({{ group.list|length }})</span>
+            <i class="bi bi-chevron-up accordion-icon"></i>
         </div>
-        <div class="accordion-body">
+        <div class="accordion-body open">
             {% for clinic in group.list %}
             <div style="margin-bottom:16px;padding:12px;background:var(--gray-50);border-radius:8px;">
                 <h4 style="margin-bottom:10px;color:var(--gray-700);">{{ clinic.name }}</h4>

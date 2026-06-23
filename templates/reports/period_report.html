@@ -5,7 +5,6 @@
 {% block topbar_actions %}
 <div style="display:flex;gap:8px;">
     <a href="{% url 'reports:period' %}?date_from={{ date_from }}&date_to={{ date_to }}&export=excel" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
-    <a href="{% url 'reports:period' %}?date_from={{ date_from }}&date_to={{ date_to }}&export=csv" class="btn btn-outline btn-sm"><i class="bi bi-filetype-csv"></i> CSV</a>
     <a href="{% url 'reports:home' %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-right"></i> العودة</a>
 </div>
 {% endblock %}
@@ -21,27 +20,23 @@
         <div class="stat-info"><div class="value">{{ overall.total }}</div><div class="label">إجمالي التقييمات</div></div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon {% if overall.avg_score >= 60 %}success{% elif overall.avg_score >= 40 %}warning{% else %}danger{% endif %}"><i class="bi bi-speedometer2"></i></div>
-        <div class="stat-info"><div class="value">{{ overall.avg_score|floatformat:1 }}%</div><div class="label">المتوسط العام</div></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon info"><i class="bi bi-people"></i></div>
-        <div class="stat-info"><div class="value">{{ overall.unique_beneficiaries }}</div><div class="label">عدد المستفيدين</div></div>
+        <div class="stat-icon {% if overall.avg_total >= 60 %}success{% elif overall.avg_total >= 40 %}warning{% else %}danger{% endif %}"><i class="bi bi-speedometer2"></i></div>
+        <div class="stat-info"><div class="value">{{ overall.avg_total|floatformat:1 }}%</div><div class="label">المتوسط العام</div></div>
     </div>
 </div>
 
-{% if center_stats %}
+{% if center_performance %}
 <div class="card" style="margin-bottom:24px;">
     <div class="card-header"><h2>أداء المراكز</h2></div>
     <div class="table-container">
         <table>
-            <thead><tr><th>المركز</th><th>التقييمات</th><th>المستفيدون</th><th>المتوسط</th></tr></thead>
+            <thead><tr><th>المركز</th><th>المحور</th><th>المتوسط</th></tr></thead>
             <tbody>
-            {% for s in center_stats %}
+            {% for s in center_performance %}
+            {% if s.avg_score %}
             <tr>
-                <td><strong>{{ s.center_name }}</strong></td>
-                <td>{{ s.count }}</td>
-                <td>{{ s.unique_beneficiaries }}</td>
+                <td><strong>{{ s.name }}</strong></td>
+                <td>{{ s.axis }}</td>
                 <td>
                     <strong>{{ s.avg_score|floatformat:1 }}%</strong>
                     <div class="progress-bar" style="width:60px;display:inline-block;vertical-align:middle;margin-right:8px;">
@@ -49,6 +44,7 @@
                     </div>
                 </td>
             </tr>
+            {% endif %}
             {% endfor %}
             </tbody>
         </table>
@@ -60,11 +56,11 @@
     <div class="card-header"><h2>الأداء اليومي</h2></div>
     <div class="table-container">
         <table>
-            <thead><tr><th>التاريخ</th><th>التقييمات</th><th>المتوسط</th><th>أعلى</th><th>أدنى</th></tr></thead>
+            <thead><tr><th>التاريخ</th><th>التقييمات</th><th>المتوسط</th><th>تقدّم</th><th>ثابت</th><th>تراجع</th></tr></thead>
             <tbody>
             {% for d in daily_stats %}
             <tr>
-                <td>{{ d.date|date:"Y/m/d" }}</td>
+                <td>{{ d.assessment__date|date:"Y/m/d" }}</td>
                 <td>{{ d.count }}</td>
                 <td>
                     <strong>{{ d.avg_score|floatformat:1 }}%</strong>
@@ -72,8 +68,9 @@
                         <div class="fill {% if d.avg_score >= 60 %}green{% elif d.avg_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ d.avg_score|floatformat:0 }}%;"></div>
                     </div>
                 </td>
-                <td>{{ d.max_score|floatformat:1 }}%</td>
-                <td>{{ d.min_score|floatformat:1 }}%</td>
+                <td><span class="badge badge-success">{{ d.progressing }}</span></td>
+                <td><span class="badge badge-warning">{{ d.stable }}</span></td>
+                <td><span class="badge badge-danger">{{ d.regressing }}</span></td>
             </tr>
             {% endfor %}
             </tbody>

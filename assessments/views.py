@@ -36,8 +36,8 @@ def assessment_create(request):
     form.fields["beneficiary"].queryset = Beneficiary.objects.filter(status="active")
 
     accessible_centers = request.user.get_accessible_centers()
-    activities = Activity.objects.filter(center__in=accessible_centers, is_active=True).select_related("center").prefetch_related("fields")
-    clinics = Clinic.objects.filter(center__in=accessible_centers, is_active=True).select_related("center").prefetch_related("fields")
+    activities = Activity.objects.filter(center__in=accessible_centers, is_active=True).select_related("center").prefetch_related("fields").order_by("center__order", "center__name", "order", "name")
+    clinics = Clinic.objects.filter(center__in=accessible_centers, is_active=True).select_related("center").prefetch_related("fields").order_by("center__order", "center__name", "order", "name")
 
     if request.method == "POST" and form.is_valid():
         assessment = form.save(commit=False)
@@ -67,8 +67,8 @@ def assessment_edit(request, pk):
     )
 
     accessible_centers = request.user.get_accessible_centers()
-    activities = Activity.objects.filter(center__in=accessible_centers, is_active=True).select_related("center").prefetch_related("fields")
-    clinics = Clinic.objects.filter(center__in=accessible_centers, is_active=True).select_related("center").prefetch_related("fields")
+    activities = Activity.objects.filter(center__in=accessible_centers, is_active=True).select_related("center").prefetch_related("fields").order_by("center__order", "center__name", "order", "name")
+    clinics = Clinic.objects.filter(center__in=accessible_centers, is_active=True).select_related("center").prefetch_related("fields").order_by("center__order", "center__name", "order", "name")
 
     existing_activity_data = {}
     for rec in assessment.activity_records.all():

@@ -493,5 +493,5 @@ def beneficiary_data_delete(request, pk):
         b.save()
         from django.contrib import messages
         messages.success(request, "تم حذف بيانات المستفيد الشخصية بنجاح (حق الحذف)")
-        return render(request, "reports/data_deleted.html", {"b": b})
-    return render(request, "reports/data_delete_confirm.html", {"b": b})
+        return render(request, "reports/data_deleted.html", {"name": b.full_name})
+    return render(request, "reports/data_delete_confirm.html", {"beneficiary": b})
