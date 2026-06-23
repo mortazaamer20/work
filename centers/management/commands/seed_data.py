@@ -54,6 +54,11 @@ class Command(BaseCommand):
                         {"name": "القدرة على تقليم الأشجار", "field_key": "pruning", "field_type": "rating", "max_score": 5},
                         {"name": "التعامل مع النباتات المتضررة", "field_key": "damaged_plants", "field_type": "rating", "max_score": 5},
                     ]},
+                    {"name": "التلوين", "slug": "coloring", "fields": [
+                        {"name": "التحكم بالألوان والتدرجات", "field_key": "color_control", "field_type": "rating", "max_score": 5},
+                        {"name": "الدقة في التلوين داخل الحدود", "field_key": "precision", "field_type": "rating", "max_score": 5},
+                        {"name": "الإبداع في اختيار الألوان", "field_key": "creativity", "field_type": "rating", "max_score": 5},
+                    ]},
                     {"name": "النحت (تشكيل)", "slug": "sculpture", "fields": [
                         {"name": "مستوى تشكيل الطين والجبس", "field_key": "clay_molding", "field_type": "rating", "max_score": 5},
                         {"name": "تحديد الأبعاد الثلاثية", "field_key": "3d_dimensions", "field_type": "rating", "max_score": 5},

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}تم حذف البيانات{% endblock %}
+{% block page_title %}تم حذف البيانات{% endblock %}
+{% block nav_reports %}active{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px;">
+    <div class="card-body" style="text-align:center;padding:32px;">
+        <div style="font-size:3rem;color:var(--success);margin-bottom:16px;"><i class="bi bi-check-circle"></i></div>
+        <h2 style="margin-bottom:8px;">تم الحذف بنجاح</h2>
+        <p style="color:var(--gray-600);margin-bottom:24px;">تم حذف جميع بيانات التقييمات للمستفيد <strong>{{ name }}</strong> بنجاح.</p>
+        <a href="{% url 'reports:home' %}" class="btn btn-primary"><i class="bi bi-arrow-right"></i> العودة للتقارير</a>
+    </div>
+</div>
+{% endblock %}
