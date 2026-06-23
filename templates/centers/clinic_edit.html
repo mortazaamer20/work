@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block nav_centers %}active{% endblock %}
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><h2>بيانات العيادة</h2></div>
+        <div class="card-body">
+            <div class="form-grid">
+                {% for field in form %}
+                <div class="form-group">
+                    <label>{{ field.label }}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h2>حقول العيادة</h2></div>
+        <div class="card-body">
+            {{ formset.management_form }}
+            {% for f in formset %}
+            <div class="formset-row">
+                {% if f.instance.pk %}{{ f.DELETE.as_hidden }}{% endif %}
+                <div class="form-grid">
+                    {% for field in f %}
+                    {% if field.name != "DELETE" %}
+                    <div class="form-group">
+                        <label>{{ field.label }}</label>
+                        {{ field }}
+                        {{ field.errors }}
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% if f.instance.pk %}
+                <label style="color:var(--danger);font-size:0.8rem;margin-top:8px;display:flex;align-items:center;gap:4px;cursor:pointer;">
+                    {{ f.DELETE }} حذف هذا الحقل
+                </label>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {{ formset.errors }}
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:20px;">
+        <div class="card-body">
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> حفظ</button>
+                <a href="{% url 'centers:clinic_list' clinic.center.pk %}" class="btn btn-outline">إلغاء</a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}تقييم {{ assessment.beneficiary.full_name }} - {{ assessment.date }}{% endblock %}
+{% block page_title %}تفاصيل التقييم{% endblock %}
+{% block nav_assessments %}active{% endblock %}
+{% block topbar_actions %}
+{% if user|can_edit:"assessments" %}
+<a href="{% url 'assessments:edit' assessment.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i> تعديل</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="grid-2" style="margin-bottom:20px;">
+    <div class="card">
+        <div class="card-header"><h2>بيانات التقييم</h2></div>
+        <div class="card-body">
+            <table>
+                <tr><th style="width:140px;">المستفيد</th><td><a href="{% url 'beneficiaries:detail' assessment.beneficiary.pk %}">{{ assessment.beneficiary.full_name }}</a></td></tr>
+                <tr><th>التاريخ</th><td>{{ assessment.date|date:"Y/m/d" }}</td></tr>
+                <tr><th>الحضور</th><td>{{ assessment.get_attendance_display }}</td></tr>
+                <tr><th>التفاعل</th><td>{{ assessment.interaction_level }}/5</td></tr>
+                <tr><th>المزاج</th><td>{{ assessment.get_mood_display }}</td></tr>
+                <tr><th>المظهر</th><td>{{ assessment.get_appearance_display }}</td></tr>
+                <tr><th>المقيّم</th><td>{{ assessment.assessed_by.full_name|default:"—" }}</td></tr>
+            </table>
+            {% if assessment.notes %}<div style="margin-top:12px;"><strong>ملاحظات:</strong> {{ assessment.notes }}</div>{% endif %}
+        </div>
+    </div>
+
+    {% if assessment.rehab_index %}
+    <div class="card">
+        <div class="card-header"><h2>مؤشر التأهيل اليومي</h2></div>
+        <div class="card-body" style="text-align:center;">
+            <div class="score-gauge" style="background:conic-gradient(
+                {% if assessment.rehab_index.total_score >= 60 %}var(--success){% elif assessment.rehab_index.total_score >= 40 %}var(--warning){% else %}var(--danger){% endif %} 0% {{ assessment.rehab_index.total_score }}%,
+                var(--gray-200) {{ assessment.rehab_index.total_score }}% 100%
+            );margin-bottom:12px;">
+                <div style="width:80px;height:80px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;">
+                    {{ assessment.rehab_index.total_score }}%
+                </div>
+            </div>
+            {% if assessment.rehab_index.status == "progressing" %}<span class="badge badge-success" style="font-size:0.9rem;padding:6px 16px;">تقدّم مستقر</span>
+            {% elif assessment.rehab_index.status == "stable" %}<span class="badge badge-warning" style="font-size:0.9rem;padding:6px 16px;">ثابت</span>
+            {% else %}<span class="badge badge-danger" style="font-size:0.9rem;padding:6px 16px;">تراجع يحتاج تدخّل</span>{% endif %}
+
+            <div style="margin-top:20px;text-align:right;">
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                        <span>الطبي والنفسي ({{ assessment.rehab_index.medical_weight }}%)</span>
+                        <strong>{{ assessment.rehab_index.medical_psychological_score }}%</strong>
+                    </div>
+                    <div class="progress-bar"><div class="fill {% if assessment.rehab_index.medical_psychological_score >= 60 %}green{% elif assessment.rehab_index.medical_psychological_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ assessment.rehab_index.medical_psychological_score }}%;"></div></div>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                        <span>السلوكي والانضباطي ({{ assessment.rehab_index.behavioral_weight }}%)</span>
+                        <strong>{{ assessment.rehab_index.behavioral_score }}%</strong>
+                    </div>
+                    <div class="progress-bar"><div class="fill {% if assessment.rehab_index.behavioral_score >= 60 %}green{% elif assessment.rehab_index.behavioral_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ assessment.rehab_index.behavioral_score }}%;"></div></div>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                        <span>المهاري والتقني ({{ assessment.rehab_index.skill_weight }}%)</span>
+                        <strong>{{ assessment.rehab_index.skill_technical_score }}%</strong>
+                    </div>
+                    <div class="progress-bar"><div class="fill {% if assessment.rehab_index.skill_technical_score >= 60 %}green{% elif assessment.rehab_index.skill_technical_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ assessment.rehab_index.skill_technical_score }}%;"></div></div>
+                </div>
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                        <span>الاجتماعي والروحي ({{ assessment.rehab_index.social_weight }}%)</span>
+                        <strong>{{ assessment.rehab_index.social_spiritual_score }}%</strong>
+                    </div>
+                    <div class="progress-bar"><div class="fill {% if assessment.rehab_index.social_spiritual_score >= 60 %}green{% elif assessment.rehab_index.social_spiritual_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ assessment.rehab_index.social_spiritual_score }}%;"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if activity_records %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h2>سجلات الأنشطة</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>المركز</th><th>النشاط</th><th>النتيجة</th><th>ملاحظات</th></tr></thead>
+            <tbody>
+            {% for rec in activity_records %}
+            <tr>
+                <td>{{ rec.activity.center.name }}</td>
+                <td><strong>{{ rec.activity.name }}</strong></td>
+                <td>
+                    <strong>{{ rec.score }}%</strong>
+                    <div class="progress-bar" style="width:80px;margin-top:4px;">
+                        <div class="fill {% if rec.score >= 60 %}green{% elif rec.score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ rec.score }}%;"></div>
+                    </div>
+                </td>
+                <td>{{ rec.notes|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+{% if clinic_records %}
+<div class="card">
+    <div class="card-header"><h2>سجلات العيادات</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>المركز</th><th>العيادة</th><th>النتيجة</th><th>ملاحظات</th></tr></thead>
+            <tbody>
+            {% for rec in clinic_records %}
+            <tr>
+                <td>{{ rec.clinic.center.name }}</td>
+                <td><strong>{{ rec.clinic.name }}</strong></td>
+                <td>
+                    <strong>{{ rec.score }}%</strong>
+                    <div class="progress-bar" style="width:80px;margin-top:4px;">
+                        <div class="fill {% if rec.score >= 60 %}green{% elif rec.score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ rec.score }}%;"></div>
+                    </div>
+                </td>
+                <td>{{ rec.notes|default:"—" }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

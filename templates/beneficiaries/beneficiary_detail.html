@@ -1,0 +1,85 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}{{ b.full_name }}{% endblock %}
+{% block page_title %}ملف المستفيد{% endblock %}
+{% block nav_beneficiaries %}active{% endblock %}
+{% block topbar_actions %}
+<div style="display:flex;gap:8px;">
+    {% if user|can_edit:"beneficiaries" %}
+    <a href="{% url 'beneficiaries:edit' b.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i> تعديل</a>
+    {% endif %}
+    {% if user|can_add:"assessments" %}
+    <a href="{% url 'assessments:create' %}?beneficiary={{ b.pk }}" class="btn btn-primary btn-sm"><i class="bi bi-clipboard2-pulse"></i> تقييم يومي</a>
+    {% endif %}
+    {% if user|can_view:"reports" %}
+    <a href="{% url 'dashboard:beneficiary_report' b.pk %}" class="btn btn-success btn-sm"><i class="bi bi-graph-up"></i> التقرير</a>
+    {% endif %}
+</div>
+{% endblock %}
+{% block content %}
+<div class="grid-2">
+    <div class="card">
+        <div class="card-header"><h2>البيانات الأساسية</h2></div>
+        <div class="card-body">
+            <table>
+                <tr><th style="width:140px;">الرقم المرجعي</th><td><strong>{{ b.ref_number }}</strong></td></tr>
+                <tr><th>الاسم</th><td>{{ b.full_name }}</td></tr>
+                <tr><th>الجنس</th><td>{{ b.get_gender_display }}</td></tr>
+                <tr><th>العمر</th><td>{{ b.age }} سنة</td></tr>
+                <tr><th>تاريخ الميلاد</th><td>{{ b.date_of_birth|date:"Y/m/d" }}</td></tr>
+                <tr><th>رقم الهوية</th><td>{{ b.national_id|default:"—" }}</td></tr>
+                <tr><th>الهاتف</th><td>{{ b.phone|default:"—" }}</td></tr>
+                <tr><th>تاريخ الدخول</th><td>{{ b.admission_date|date:"Y/m/d" }}</td></tr>
+                <tr><th>الحالة</th><td>
+                    {% if b.status == "active" %}<span class="badge badge-success">نشط</span>
+                    {% elif b.status == "discharged" %}<span class="badge badge-gray">خرج</span>
+                    {% elif b.status == "suspended" %}<span class="badge badge-warning">معلّق</span>
+                    {% else %}<span class="badge badge-info">محوّل</span>{% endif %}
+                </td></tr>
+            </table>
+            {% if b.admission_reason %}
+            <div style="margin-top:16px;">
+                <strong>سبب الدخول:</strong>
+                <p style="color:var(--gray-600);margin-top:4px;">{{ b.admission_reason }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h2>آخر التقييمات</h2></div>
+        <div class="card-body">
+            {% if assessments %}
+            <table>
+                <thead><tr><th>التاريخ</th><th>المؤشر</th><th>الحالة</th><th></th></tr></thead>
+                <tbody>
+                {% for a in assessments %}
+                <tr>
+                    <td>{{ a.date|date:"Y/m/d" }}</td>
+                    <td>
+                        {% if a.rehab_index %}
+                        <strong>{{ a.rehab_index.total_score }}%</strong>
+                        <div class="progress-bar" style="width:100px;margin-top:4px;">
+                            <div class="fill {% if a.rehab_index.total_score >= 60 %}green{% elif a.rehab_index.total_score >= 40 %}yellow{% else %}red{% endif %}"
+                                 style="width:{{ a.rehab_index.total_score }}%;"></div>
+                        </div>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        {% if a.rehab_index %}
+                        {% if a.rehab_index.status == "progressing" %}<span class="badge badge-success">تقدّم</span>
+                        {% elif a.rehab_index.status == "stable" %}<span class="badge badge-warning">ثابت</span>
+                        {% else %}<span class="badge badge-danger">تراجع</span>{% endif %}
+                        {% endif %}
+                    </td>
+                    <td><a href="{% url 'assessments:detail' a.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-eye"></i></a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--gray-500);text-align:center;padding:24px;">لا توجد تقييمات بعد</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

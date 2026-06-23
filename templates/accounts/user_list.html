@@ -1,0 +1,51 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}المستخدمون{% endblock %}
+{% block page_title %}المستخدمون{% endblock %}
+{% block nav_users %}active{% endblock %}
+{% block topbar_actions %}
+{% if user|can_add:"users" %}
+<a href="{% url 'accounts:user_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> إضافة مستخدم</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>الاسم</th>
+                    <th>اسم المستخدم</th>
+                    <th>الدور</th>
+                    <th>الهاتف</th>
+                    <th>الحالة</th>
+                    <th>إجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td><strong>{{ u.full_name|default:u.username }}</strong></td>
+                    <td>{{ u.username }}</td>
+                    <td>{{ u.role.name|default:"—" }}</td>
+                    <td>{{ u.phone|default:"—" }}</td>
+                    <td>
+                        {% if u.is_active %}<span class="badge badge-success">نشط</span>
+                        {% else %}<span class="badge badge-gray">معطّل</span>{% endif %}
+                    </td>
+                    <td>
+                        {% if user|can_edit:"users" %}
+                        <a href="{% url 'accounts:user_edit' u.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i></a>
+                        {% endif %}
+                        {% if user|can_delete:"users" %}
+                        <a href="{% url 'accounts:user_delete' u.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="text-align:center;color:var(--gray-500);padding:40px;">لا يوجد مستخدمون</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

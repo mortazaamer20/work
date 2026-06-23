@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}تقرير {{ b.full_name }}{% endblock %}
+{% block page_title %}تقرير المستفيد{% endblock %}
+{% block nav_beneficiaries %}active{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-header">
+        <h2>{{ b.full_name }} ({{ b.ref_number }})</h2>
+        <a href="{% url 'beneficiaries:detail' b.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-right"></i> الملف</a>
+    </div>
+    <div class="card-body">
+        {% if indices %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>التاريخ</th>
+                        <th>الطبي والنفسي</th>
+                        <th>السلوكي</th>
+                        <th>المهاري</th>
+                        <th>الاجتماعي</th>
+                        <th>المؤشر الكلي</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for idx in indices %}
+                <tr>
+                    <td>{{ idx.assessment.date|date:"Y/m/d" }}</td>
+                    <td>{{ idx.medical_psychological_score }}%</td>
+                    <td>{{ idx.behavioral_score }}%</td>
+                    <td>{{ idx.skill_technical_score }}%</td>
+                    <td>{{ idx.social_spiritual_score }}%</td>
+                    <td>
+                        <strong>{{ idx.total_score }}%</strong>
+                        <div class="progress-bar" style="width:80px;display:inline-block;vertical-align:middle;margin-right:8px;">
+                            <div class="fill {% if idx.total_score >= 60 %}green{% elif idx.total_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ idx.total_score }}%;"></div>
+                        </div>
+                    </td>
+                    <td>
+                        {% if idx.status == "progressing" %}<span class="badge badge-success">تقدّم</span>
+                        {% elif idx.status == "stable" %}<span class="badge badge-warning">ثابت</span>
+                        {% else %}<span class="badge badge-danger">تراجع</span>{% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="text-align:center;color:var(--gray-500);padding:40px;">لا توجد بيانات مؤشرات لهذا المستفيد.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

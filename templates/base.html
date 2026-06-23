@@ -1,0 +1,117 @@
+{% load static %}{% load perm_tags %}<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}مجمع التأهيل{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+<div class="layout">
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="logo"><i class="bi bi-heart-pulse"></i></div>
+            <div>
+                <h1>مجمع التأهيل</h1>
+                <p>نظام إدارة المستفيدين</p>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <div class="nav-section-title">الرئيسية</div>
+                {% if user|can_view:"dashboard" %}
+                <a href="{% url 'dashboard:home' %}" class="nav-item {% block nav_dashboard %}{% endblock %}">
+                    <i class="bi bi-grid-1x2"></i> لوحة المؤشرات
+                </a>
+                {% endif %}
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">إدارة البيانات</div>
+                {% if user|can_view:"beneficiaries" %}
+                <a href="{% url 'beneficiaries:list' %}" class="nav-item {% block nav_beneficiaries %}{% endblock %}">
+                    <i class="bi bi-people"></i> المستفيدون
+                </a>
+                {% endif %}
+                {% if user|can_view:"assessments" %}
+                <a href="{% url 'assessments:list' %}" class="nav-item {% block nav_assessments %}{% endblock %}">
+                    <i class="bi bi-clipboard2-pulse"></i> التقييمات اليومية
+                </a>
+                {% endif %}
+            </div>
+            <div class="nav-section">
+                <div class="nav-section-title">الإعدادات</div>
+                {% if user|can_view:"centers" %}
+                <a href="{% url 'centers:list' %}" class="nav-item {% block nav_centers %}{% endblock %}">
+                    <i class="bi bi-building"></i> المراكز والأنشطة
+                </a>
+                {% endif %}
+                {% if user|can_view:"users" %}
+                <a href="{% url 'accounts:user_list' %}" class="nav-item {% block nav_users %}{% endblock %}">
+                    <i class="bi bi-person-gear"></i> المستخدمون
+                </a>
+                {% endif %}
+                {% if user|can_view:"roles" %}
+                <a href="{% url 'accounts:role_list' %}" class="nav-item {% block nav_roles %}{% endblock %}">
+                    <i class="bi bi-shield-lock"></i> الأدوار والصلاحيات
+                </a>
+                {% endif %}
+            </div>
+        </nav>
+        <div class="sidebar-user">
+            <div class="avatar">{{ user.full_name|truncatechars:1 }}</div>
+            <div class="info">
+                <div class="name">{{ user.full_name|default:user.username }}</div>
+                <div class="role-name">{{ user.role.name|default:"مدير النظام" }}</div>
+            </div>
+            <a href="{% url 'accounts:logout' %}" title="تسجيل الخروج" style="color:var(--gray-400);">
+                <i class="bi bi-box-arrow-left"></i>
+            </a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
+            <button class="btn-menu" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+            <div class="page-title">{% block page_title %}{% endblock %}</div>
+            {% block topbar_actions %}{% endblock %}
+        </header>
+
+        <div class="page-content">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">
+                <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</div>
+
+<script src="https://unpkg.com/htmx.org@2.0.4"></script>
+<script>
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.querySelector('.sidebar-overlay').classList.toggle('open');
+}
+document.querySelectorAll('.accordion-header').forEach(function(h) {
+    h.addEventListener('click', function() {
+        var body = this.nextElementSibling;
+        body.classList.toggle('open');
+        var icon = this.querySelector('.accordion-icon');
+        if (icon) icon.classList.toggle('bi-chevron-down');
+        if (icon) icon.classList.toggle('bi-chevron-up');
+    });
+});
+</script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

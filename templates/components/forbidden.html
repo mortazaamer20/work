@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}غير مصرّح{% endblock %}
+{% block page_title %}غير مصرّح{% endblock %}
+{% block content %}
+<div class="card" style="max-width:500px;margin:40px auto;">
+    <div class="card-body" style="text-align:center;padding:40px;">
+        <i class="bi bi-shield-x" style="font-size:4rem;color:var(--danger);"></i>
+        <h2 style="margin:16px 0 8px;">ليس لديك صلاحية</h2>
+        <p style="color:var(--gray-500);margin-bottom:24px;">لا تملك الصلاحيات اللازمة للوصول إلى هذه الصفحة.</p>
+        <a href="/" class="btn btn-primary"><i class="bi bi-house"></i> الصفحة الرئيسية</a>
+    </div>
+</div>
+{% endblock %}

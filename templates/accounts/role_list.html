@@ -1,0 +1,38 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}الأدوار والصلاحيات{% endblock %}
+{% block page_title %}الأدوار والصلاحيات{% endblock %}
+{% block nav_roles %}active{% endblock %}
+{% block topbar_actions %}
+{% if user|can_add:"roles" %}
+<a href="{% url 'accounts:role_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> إضافة دور</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(300px,1fr));">
+    {% for role in roles %}
+    <div class="card">
+        <div class="card-header">
+            <h2><i class="bi bi-shield-lock" style="color:var(--primary);margin-left:8px;"></i>{{ role.name }}</h2>
+            <div style="display:flex;gap:6px;">
+                {% if user|can_edit:"roles" %}
+                <a href="{% url 'accounts:role_edit' role.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i></a>
+                {% endif %}
+                {% if not role.is_system and user|can_delete:"roles" %}
+                <a href="{% url 'accounts:role_delete' role.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            {% if role.description %}<p style="color:var(--gray-500);font-size:0.85rem;margin-bottom:12px;">{{ role.description }}</p>{% endif %}
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <span class="badge badge-info">{{ role.permissions.count }} صلاحية</span>
+                <span class="badge badge-gray">{{ role.users.count }} مستخدم</span>
+            </div>
+            {% if role.is_system %}<span class="badge badge-warning">دور نظام</span>{% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="card"><div class="card-body" style="text-align:center;color:var(--gray-500);padding:40px;">لا توجد أدوار. أنشئ دوراً جديداً للبدء.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}

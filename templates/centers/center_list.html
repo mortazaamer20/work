@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}المراكز والأنشطة{% endblock %}
+{% block page_title %}المراكز والأنشطة{% endblock %}
+{% block nav_centers %}active{% endblock %}
+{% block topbar_actions %}
+{% if user|can_add:"centers" %}
+<a href="{% url 'centers:center_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> إضافة مركز</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(320px,1fr));">
+    {% for center in centers %}
+    <div class="card">
+        <div class="card-header">
+            <h2>
+                <i class="{{ center.icon }}" style="color:{{ center.color }};margin-left:8px;"></i>
+                {{ center.name }}
+            </h2>
+            <div style="display:flex;gap:4px;">
+                {% if user|can_edit:"centers" %}
+                <a href="{% url 'centers:center_edit' center.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i></a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <p style="font-size:0.8rem;color:var(--gray-500);margin-bottom:12px;">
+                المحور: {{ center.get_axis_display }} | الوزن: {{ center.weight }}%
+            </p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+                <span class="badge badge-info">{{ center.activities.count }} نشاط</span>
+                <span class="badge badge-success">{{ center.clinics.count }} عيادة</span>
+                {% if not center.is_active %}<span class="badge badge-gray">غير نشط</span>{% endif %}
+            </div>
+            <div style="display:flex;gap:8px;">
+                {% if user|can_view:"activities" %}
+                <a href="{% url 'centers:activity_list' center.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-list-task"></i> الأنشطة</a>
+                {% endif %}
+                {% if user|can_view:"clinics" %}
+                <a href="{% url 'centers:clinic_list' center.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-hospital"></i> العيادات</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="card"><div class="card-body" style="text-align:center;color:var(--gray-500);padding:40px;">لا توجد مراكز. أنشئ مركزاً جديداً للبدء.</div></div>
+    {% endfor %}
+</div>
+{% endblock %}

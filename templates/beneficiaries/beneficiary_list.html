@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}المستفيدون{% endblock %}
+{% block page_title %}المستفيدون{% endblock %}
+{% block nav_beneficiaries %}active{% endblock %}
+{% block topbar_actions %}
+{% if user|can_add:"beneficiaries" %}
+<a href="{% url 'beneficiaries:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> إضافة مستفيد</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <form class="search-bar" style="margin:0;flex:1;" method="get"
+              hx-get="{% url 'beneficiaries:list' %}" hx-target="#beneficiary-table" hx-trigger="input changed delay:300ms from:find input, change from:find select">
+            <input type="text" name="q" value="{{ q }}" placeholder="بحث بالاسم أو الرقم المرجعي..." class="form-input" style="max-width:300px;">
+            <select name="status" class="form-select" style="max-width:160px;">
+                <option value="">كل الحالات</option>
+                <option value="active" {% if status == "active" %}selected{% endif %}>نشط</option>
+                <option value="discharged" {% if status == "discharged" %}selected{% endif %}>خرج</option>
+                <option value="suspended" {% if status == "suspended" %}selected{% endif %}>معلّق</option>
+            </select>
+        </form>
+    </div>
+    <div id="beneficiary-table">
+        {% include "beneficiaries/beneficiary_list_partial.html" %}
+    </div>
+</div>
+{% endblock %}

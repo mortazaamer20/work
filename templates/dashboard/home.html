@@ -1,0 +1,140 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}لوحة المؤشرات{% endblock %}
+{% block page_title %}لوحة المؤشرات{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary"><i class="bi bi-people"></i></div>
+        <div class="stat-info">
+            <div class="value">{{ active_beneficiaries }}</div>
+            <div class="label">مستفيد نشط</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon success"><i class="bi bi-clipboard2-check"></i></div>
+        <div class="stat-info">
+            <div class="value">{{ today_count }}</div>
+            <div class="label">تقييم اليوم</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning"><i class="bi bi-clock-history"></i></div>
+        <div class="stat-info">
+            <div class="value">{{ pending_count }}</div>
+            <div class="label">لم يُقيّم بعد</div>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon info"><i class="bi bi-graph-up-arrow"></i></div>
+        <div class="stat-info">
+            <div class="value">{{ avg_score }}%</div>
+            <div class="label">متوسط المؤشر اليوم</div>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h2>توزيع حالات التأهيل اليوم</h2></div>
+        <div class="card-body">
+            <div style="display:flex;gap:20px;justify-content:center;padding:20px 0;">
+                <div style="text-align:center;">
+                    <div style="font-size:2.5rem;font-weight:800;color:var(--success);">{{ progressing }}</div>
+                    <div class="badge badge-success" style="margin-top:8px;">تقدّم مستقر</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:2.5rem;font-weight:800;color:var(--warning);">{{ stable }}</div>
+                    <div class="badge badge-warning" style="margin-top:8px;">ثابت</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:2.5rem;font-weight:800;color:var(--danger);">{{ regressing }}</div>
+                    <div class="badge badge-danger" style="margin-top:8px;">تراجع</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h2>متوسط المحاور اليوم</h2></div>
+        <div class="card-body">
+            <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                    <span>الطبي والنفسي (40%)</span>
+                    <strong>{{ axis_averages.medical|floatformat:1|default:"0" }}%</strong>
+                </div>
+                <div class="progress-bar"><div class="fill green" style="width:{{ axis_averages.medical|default:0 }}%;"></div></div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                    <span>السلوكي والانضباطي (20%)</span>
+                    <strong>{{ axis_averages.behavioral|floatformat:1|default:"0" }}%</strong>
+                </div>
+                <div class="progress-bar"><div class="fill green" style="width:{{ axis_averages.behavioral|default:0 }}%;"></div></div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                    <span>المهاري والتقني (20%)</span>
+                    <strong>{{ axis_averages.skill|floatformat:1|default:"0" }}%</strong>
+                </div>
+                <div class="progress-bar"><div class="fill green" style="width:{{ axis_averages.skill|default:0 }}%;"></div></div>
+            </div>
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                    <span>الاجتماعي والروحي (20%)</span>
+                    <strong>{{ axis_averages.social|floatformat:1|default:"0" }}%</strong>
+                </div>
+                <div class="progress-bar"><div class="fill green" style="width:{{ axis_averages.social|default:0 }}%;"></div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h2>آخر التقييمات</h2>
+        {% if user|can_add:"assessments" %}
+        <a href="{% url 'assessments:create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> تقييم جديد</a>
+        {% endif %}
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>التاريخ</th>
+                    <th>المستفيد</th>
+                    <th>المؤشر</th>
+                    <th>الحالة</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for a in recent_assessments %}
+            <tr>
+                <td>{{ a.date|date:"Y/m/d" }}</td>
+                <td><a href="{% url 'beneficiaries:detail' a.beneficiary.pk %}">{{ a.beneficiary.full_name }}</a></td>
+                <td>
+                    {% if a.rehab_index %}
+                    <strong>{{ a.rehab_index.total_score }}%</strong>
+                    <div class="progress-bar" style="width:80px;display:inline-block;vertical-align:middle;margin-right:8px;">
+                        <div class="fill {% if a.rehab_index.total_score >= 60 %}green{% elif a.rehab_index.total_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ a.rehab_index.total_score }}%;"></div>
+                    </div>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if a.rehab_index %}
+                    {% if a.rehab_index.status == "progressing" %}<span class="badge badge-success">تقدّم</span>
+                    {% elif a.rehab_index.status == "stable" %}<span class="badge badge-warning">ثابت</span>
+                    {% else %}<span class="badge badge-danger">تراجع</span>{% endif %}
+                    {% endif %}
+                </td>
+                <td><a href="{% url 'assessments:detail' a.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-eye"></i></a></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:40px;">لا توجد تقييمات بعد. ابدأ بإضافة تقييم يومي.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

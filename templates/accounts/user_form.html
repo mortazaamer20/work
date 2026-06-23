@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block nav_users %}active{% endblock %}
+{% block content %}
+<div class="card" style="max-width:800px;">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="form-grid">
+                {% for field in form %}
+                {% if field.name != "assigned_centers" %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% if form.assigned_centers %}
+            <div class="form-group" style="margin-top:16px;">
+                <label>المراكز المعيّنة</label>
+                <div style="display:flex;flex-wrap:wrap;gap:12px;padding:8px 0;">
+                    {% for checkbox in form.assigned_centers %}
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.9rem;">{{ checkbox }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> حفظ</button>
+                <a href="{% url 'accounts:user_list' %}" class="btn btn-outline">إلغاء</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

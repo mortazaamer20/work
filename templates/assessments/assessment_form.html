@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block nav_assessments %}active{% endblock %}
+{% block content %}
+<form method="post">
+    {% csrf_token %}
+
+    <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><h2><i class="bi bi-clipboard2-pulse" style="color:var(--primary);margin-left:8px;"></i>الاستمارة اليومية الموحّدة</h2></div>
+        <div class="card-body">
+            <div class="form-grid">
+                {% for field in form %}
+                {% if field.name != "notes" %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span style="color:var(--danger);">*</span>{% endif %}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            <div class="form-group">
+                <label for="id_notes">ملاحظات عامة</label>
+                {{ form.notes }}
+            </div>
+        </div>
+    </div>
+
+    {% regroup activities by center as center_activities %}
+    {% for group in center_activities %}
+    <div class="card" style="margin-bottom:20px;">
+        <div class="accordion-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.accordion-icon').classList.toggle('bi-chevron-down');this.querySelector('.accordion-icon').classList.toggle('bi-chevron-up');">
+            <span><i class="bi bi-building" style="color:var(--primary);margin-left:8px;"></i><strong>{{ group.grouper.name }}</strong> - الأنشطة</span>
+            <i class="bi bi-chevron-down accordion-icon"></i>
+        </div>
+        <div class="accordion-body">
+            {% for activity in group.list %}
+            <div style="margin-bottom:16px;padding:12px;background:var(--gray-50);border-radius:8px;">
+                <h4 style="margin-bottom:10px;color:var(--gray-700);">{{ activity.name }}</h4>
+                <div class="form-grid">
+                    {% for field in activity.fields.all %}
+                    <div class="form-group">
+                        <label>{{ field.name }}{% if field.is_required %} <span style="color:var(--danger);">*</span>{% endif %}</label>
+                        {% if field.field_type == "text" %}
+                        <input type="text" name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-input">
+                        {% elif field.field_type == "number" %}
+                        <input type="number" name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-input" step="0.01">
+                        {% elif field.field_type == "rating" %}
+                        <select name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-select">
+                            <option value="">-- اختر --</option>
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                            <option value="4">4</option><option value="5">5</option>
+                        </select>
+                        {% elif field.field_type == "rating10" %}
+                        <select name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-select">
+                            <option value="">-- اختر --</option>
+                            {% for i in "12345678910" %}<option value="{{ forloop.counter }}">{{ forloop.counter }}</option>{% endfor %}
+                        </select>
+                        {% elif field.field_type == "boolean" %}
+                        <select name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-select">
+                            <option value="">-- اختر --</option>
+                            <option value="1">نعم</option><option value="0">لا</option>
+                        </select>
+                        {% elif field.field_type == "choice" %}
+                        <select name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-select">
+                            <option value="">-- اختر --</option>
+                            {% for choice in field.get_choices_list %}<option value="{{ choice }}">{{ choice }}</option>{% endfor %}
+                        </select>
+                        {% elif field.field_type == "date" %}
+                        <input type="date" name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-input">
+                        {% elif field.field_type == "time" %}
+                        <input type="time" name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-input">
+                        {% elif field.field_type == "textarea" %}
+                        <textarea name="activity_{{ activity.pk }}_{{ field.field_key }}" class="form-input" rows="2"></textarea>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea name="activity_{{ activity.pk }}_notes" class="form-input" rows="1"></textarea>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    {% regroup clinics by center as center_clinics %}
+    {% for group in center_clinics %}
+    <div class="card" style="margin-bottom:20px;">
+        <div class="accordion-header" onclick="this.nextElementSibling.classList.toggle('open');this.querySelector('.accordion-icon').classList.toggle('bi-chevron-down');this.querySelector('.accordion-icon').classList.toggle('bi-chevron-up');">
+            <span><i class="bi bi-hospital" style="color:var(--success);margin-left:8px;"></i><strong>{{ group.grouper.name }}</strong> - العيادات</span>
+            <i class="bi bi-chevron-down accordion-icon"></i>
+        </div>
+        <div class="accordion-body">
+            {% for clinic in group.list %}
+            <div style="margin-bottom:16px;padding:12px;background:var(--gray-50);border-radius:8px;">
+                <h4 style="margin-bottom:10px;color:var(--gray-700);">{{ clinic.name }}</h4>
+                <div class="form-grid">
+                    {% for field in clinic.fields.all %}
+                    <div class="form-group">
+                        <label>{{ field.name }}{% if field.unit %} ({{ field.unit }}){% endif %}{% if field.is_required %} <span style="color:var(--danger);">*</span>{% endif %}</label>
+                        {% if field.field_type == "text" %}
+                        <input type="text" name="clinic_{{ clinic.pk }}_{{ field.field_key }}" class="form-input">
+                        {% elif field.field_type == "number" %}
+                        <input type="number" name="clinic_{{ clinic.pk }}_{{ field.field_key }}" class="form-input" step="0.01"
+                            {% if field.normal_min != None %}min="{{ field.normal_min }}"{% endif %}
+                            {% if field.normal_max != None %}max="{{ field.normal_max }}"{% endif %}>
+                        {% elif field.field_type == "rating" %}
+                        <select name="clinic_{{ clinic.pk }}_{{ field.field_key }}" class="form-select">
+                            <option value="">-- اختر --</option>
+                            <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+                            <option value="4">4</option><option value="5">5</option>
+                        </select>
+                        {% elif field.field_type == "choice" %}
+                        <select name="clinic_{{ clinic.pk }}_{{ field.field_key }}" class="form-select">
+                            <option value="">-- اختر --</option>
+                            {% for choice in field.get_choices_list %}<option value="{{ choice }}">{{ choice }}</option>{% endfor %}
+                        </select>
+                        {% elif field.field_type == "boolean" %}
+                        <select name="clinic_{{ clinic.pk }}_{{ field.field_key }}" class="form-select">
+                            <option value="">-- اختر --</option>
+                            <option value="1">نعم</option><option value="0">لا</option>
+                        </select>
+                        {% elif field.field_type == "textarea" %}
+                        <textarea name="clinic_{{ clinic.pk }}_{{ field.field_key }}" class="form-input" rows="2"></textarea>
+                        {% else %}
+                        <input type="text" name="clinic_{{ clinic.pk }}_{{ field.field_key }}" class="form-input">
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    <label>ملاحظات</label>
+                    <textarea name="clinic_{{ clinic.pk }}_notes" class="form-input" rows="1"></textarea>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="card">
+        <div class="card-body">
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" style="padding:12px 32px;"><i class="bi bi-check-lg"></i> حفظ التقييم وحساب المؤشر</button>
+                <a href="{% url 'assessments:list' %}" class="btn btn-outline">إلغاء</a>
+            </div>
+        </div>
+    </div>
+</form>
+{% endblock %}

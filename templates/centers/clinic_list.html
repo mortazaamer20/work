@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}عيادات {{ center.name }}{% endblock %}
+{% block page_title %}عيادات {{ center.name }}{% endblock %}
+{% block nav_centers %}active{% endblock %}
+{% block topbar_actions %}
+{% if user|can_add:"clinics" %}
+<a href="{% url 'centers:clinic_create' center.pk %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> إضافة عيادة</a>
+{% endif %}
+<a href="{% url 'centers:list' %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-right"></i> العودة</a>
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead><tr><th>العيادة</th><th>عدد الحقول</th><th>الحالة</th><th>الترتيب</th><th>إجراءات</th></tr></thead>
+            <tbody>
+            {% for c in clinics %}
+            <tr>
+                <td><strong>{{ c.name }}</strong></td>
+                <td>{{ c.fields.count }} حقل</td>
+                <td>{% if c.is_active %}<span class="badge badge-success">نشط</span>{% else %}<span class="badge badge-gray">معطّل</span>{% endif %}</td>
+                <td>{{ c.order }}</td>
+                <td style="display:flex;gap:4px;">
+                    {% if user|can_edit:"clinics" %}
+                    <a href="{% url 'centers:clinic_edit' c.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i> تعديل وحقول</a>
+                    {% endif %}
+                    {% if user|can_delete:"clinics" %}
+                    <a href="{% url 'centers:clinic_delete' c.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5" style="text-align:center;color:var(--gray-500);padding:40px;">لا توجد عيادات</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% load perm_tags %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>التاريخ</th>
+                <th>المستفيد</th>
+                <th>الحضور</th>
+                <th>التفاعل</th>
+                <th>المزاج</th>
+                <th>المؤشر</th>
+                <th>الحالة</th>
+                <th>المقيّم</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for a in assessments %}
+            <tr>
+                <td>{{ a.date|date:"Y/m/d" }}</td>
+                <td><strong>{{ a.beneficiary.full_name }}</strong></td>
+                <td>{{ a.get_attendance_display }}</td>
+                <td>{{ a.interaction_level }}/5</td>
+                <td>{{ a.get_mood_display }}</td>
+                <td>
+                    {% if a.rehab_index %}
+                    <strong>{{ a.rehab_index.total_score }}%</strong>
+                    {% else %}—{% endif %}
+                </td>
+                <td>
+                    {% if a.rehab_index %}
+                    {% if a.rehab_index.status == "progressing" %}<span class="badge badge-success">تقدّم</span>
+                    {% elif a.rehab_index.status == "stable" %}<span class="badge badge-warning">ثابت</span>
+                    {% else %}<span class="badge badge-danger">تراجع</span>{% endif %}
+                    {% endif %}
+                </td>
+                <td>{{ a.assessed_by.full_name|default:"—" }}</td>
+                <td style="display:flex;gap:4px;">
+                    <a href="{% url 'assessments:detail' a.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-eye"></i></a>
+                    {% if user|can_edit:"assessments" %}
+                    <a href="{% url 'assessments:edit' a.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="9" style="text-align:center;color:var(--gray-500);padding:40px;">لا توجد تقييمات</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>

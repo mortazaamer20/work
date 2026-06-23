@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+{% block nav_beneficiaries %}active{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-grid">
+                {% for field in form %}
+                {% if field.name != "notes" and field.name != "admission_reason" and field.name != "address" %}
+                <div class="form-group">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span style="color:var(--danger);">*</span>{% endif %}</label>
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+            {% for field in form %}
+            {% if field.name == "address" or field.name == "admission_reason" or field.name == "notes" %}
+            <div class="form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            </div>
+            {% endif %}
+            {% endfor %}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> حفظ</button>
+                <a href="{% url 'beneficiaries:list' %}" class="btn btn-outline">إلغاء</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

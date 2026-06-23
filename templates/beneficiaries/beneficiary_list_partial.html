@@ -1,0 +1,44 @@
+{% load perm_tags %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>الرقم المرجعي</th>
+                <th>الاسم</th>
+                <th>الجنس</th>
+                <th>العمر</th>
+                <th>تاريخ الدخول</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in beneficiaries %}
+            <tr>
+                <td><strong>{{ b.ref_number }}</strong></td>
+                <td>{{ b.full_name }}</td>
+                <td>{{ b.get_gender_display }}</td>
+                <td>{{ b.age }} سنة</td>
+                <td>{{ b.admission_date|date:"Y/m/d" }}</td>
+                <td>
+                    {% if b.status == "active" %}<span class="badge badge-success">نشط</span>
+                    {% elif b.status == "discharged" %}<span class="badge badge-gray">خرج</span>
+                    {% elif b.status == "suspended" %}<span class="badge badge-warning">معلّق</span>
+                    {% else %}<span class="badge badge-info">محوّل</span>{% endif %}
+                </td>
+                <td style="display:flex;gap:4px;">
+                    <a href="{% url 'beneficiaries:detail' b.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-eye"></i></a>
+                    {% if user|can_edit:"beneficiaries" %}
+                    <a href="{% url 'beneficiaries:edit' b.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i></a>
+                    {% endif %}
+                    {% if user|can_add:"assessments" %}
+                    <a href="{% url 'assessments:create' %}?beneficiary={{ b.pk }}" class="btn btn-success btn-sm" title="تقييم يومي"><i class="bi bi-clipboard2-pulse"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="7" style="text-align:center;color:var(--gray-500);padding:40px;">لا يوجد مستفيدون</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
