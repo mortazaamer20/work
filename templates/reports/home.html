@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}التقارير والإحصائيات{% endblock %}
+{% block page_title %}التقارير والإحصائيات{% endblock %}
+{% block nav_reports %}active{% endblock %}
+{% block content %}
+<div class="stats-grid" style="grid-template-columns:repeat(auto-fill,minmax(280px,1fr));">
+    <a href="{% url 'reports:individual' %}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="text-align:center;padding:32px;">
+            <div class="stat-icon primary" style="margin:0 auto 16px;width:64px;height:64px;font-size:1.8rem;">
+                <i class="bi bi-person-lines-fill"></i>
+            </div>
+            <h3>تقرير فردي</h3>
+            <p style="color:var(--gray-500);font-size:0.85rem;margin-top:8px;">تقرير مفصّل لمستفيد واحد مع تصدير Excel/CSV</p>
+        </div>
+    </a>
+    <a href="{% url 'reports:group' %}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="text-align:center;padding:32px;">
+            <div class="stat-icon success" style="margin:0 auto 16px;width:64px;height:64px;font-size:1.8rem;">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <h3>تقرير جماعي</h3>
+            <p style="color:var(--gray-500);font-size:0.85rem;margin-top:8px;">مقارنة أداء جميع المستفيدين مع إحصائيات شاملة</p>
+        </div>
+    </a>
+    <a href="{% url 'reports:center' %}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="text-align:center;padding:32px;">
+            <div class="stat-icon warning" style="margin:0 auto 16px;width:64px;height:64px;font-size:1.8rem;">
+                <i class="bi bi-building"></i>
+            </div>
+            <h3>تقرير مركز/ورشة</h3>
+            <p style="color:var(--gray-500);font-size:0.85rem;margin-top:8px;">إحصائيات أداء مركز محدد بأنشطته وعياداته</p>
+        </div>
+    </a>
+    <a href="{% url 'reports:period' %}" class="card" style="text-decoration:none;color:inherit;">
+        <div class="card-body" style="text-align:center;padding:32px;">
+            <div class="stat-icon info" style="margin:0 auto 16px;width:64px;height:64px;font-size:1.8rem;">
+                <i class="bi bi-calendar-range"></i>
+            </div>
+            <h3>تقرير فترة زمنية</h3>
+            <p style="color:var(--gray-500);font-size:0.85rem;margin-top:8px;">تحليل الأداء خلال فترة محددة لكل المراكز</p>
+        </div>
+    </a>
+</div>
+{% endblock %}

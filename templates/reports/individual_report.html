@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}تقرير {{ b.full_name }}{% endblock %}
+{% block page_title %}تقرير فردي - {{ b.full_name }}{% endblock %}
+{% block nav_reports %}active{% endblock %}
+{% block topbar_actions %}
+<div style="display:flex;gap:8px;">
+    <a href="{% url 'reports:individual' %}?beneficiary={{ b.pk }}&date_from={{ date_from }}&date_to={{ date_to }}&export=excel" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    <a href="{% url 'reports:individual' %}?beneficiary={{ b.pk }}&date_from={{ date_from }}&date_to={{ date_to }}&export=csv" class="btn btn-outline btn-sm"><i class="bi bi-filetype-csv"></i> CSV</a>
+    <a href="{% url 'reports:home' %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-right"></i> العودة</a>
+</div>
+{% endblock %}
+{% block content %}
+{% if stats.count %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary"><i class="bi bi-hash"></i></div>
+        <div class="stat-info"><div class="value">{{ stats.count }}</div><div class="label">عدد التقييمات</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon {% if stats.avg >= 60 %}success{% elif stats.avg >= 40 %}warning{% else %}danger{% endif %}"><i class="bi bi-graph-up"></i></div>
+        <div class="stat-info"><div class="value">{{ stats.avg }}%</div><div class="label">المتوسط العام</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon success"><i class="bi bi-arrow-up"></i></div>
+        <div class="stat-info"><div class="value">{{ stats.max }}%</div><div class="label">أعلى مؤشر</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon danger"><i class="bi bi-arrow-down"></i></div>
+        <div class="stat-info"><div class="value">{{ stats.min }}%</div><div class="label">أدنى مؤشر</div></div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h2>متوسط المحاور</h2></div>
+        <div class="card-body">
+            <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                    <span>الطبي والنفسي</span><strong>{{ stats.avg_medical }}%</strong>
+                </div>
+                <div class="progress-bar"><div class="fill {% if stats.avg_medical >= 60 %}green{% elif stats.avg_medical >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ stats.avg_medical }}%;"></div></div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                    <span>السلوكي والانضباطي</span><strong>{{ stats.avg_behavioral }}%</strong>
+                </div>
+                <div class="progress-bar"><div class="fill {% if stats.avg_behavioral >= 60 %}green{% elif stats.avg_behavioral >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ stats.avg_behavioral }}%;"></div></div>
+            </div>
+            <div style="margin-bottom:14px;">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                    <span>المهاري والتقني</span><strong>{{ stats.avg_skill }}%</strong>
+                </div>
+                <div class="progress-bar"><div class="fill {% if stats.avg_skill >= 60 %}green{% elif stats.avg_skill >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ stats.avg_skill }}%;"></div></div>
+            </div>
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:4px;">
+                    <span>الاجتماعي والروحي</span><strong>{{ stats.avg_social }}%</strong>
+                </div>
+                <div class="progress-bar"><div class="fill {% if stats.avg_social >= 60 %}green{% elif stats.avg_social >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ stats.avg_social }}%;"></div></div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h2>أداء الأنشطة</h2></div>
+        <div class="card-body">
+            {% for s in activity_stats %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--gray-200);">
+                <div>
+                    <strong style="font-size:0.85rem;">{{ s.activity__name }}</strong>
+                    <div style="font-size:0.75rem;color:var(--gray-500);">{{ s.activity__center__name }} | {{ s.count }} جلسة</div>
+                </div>
+                <div style="text-align:left;min-width:80px;">
+                    <strong>{{ s.avg_score|floatformat:1 }}%</strong>
+                    <div class="progress-bar" style="width:60px;margin-top:4px;">
+                        <div class="fill {% if s.avg_score >= 60 %}green{% elif s.avg_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ s.avg_score }}%;"></div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="color:var(--gray-500);text-align:center;">لا توجد بيانات أنشطة</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2>سجل المؤشرات</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>التاريخ</th><th>الطبي</th><th>السلوكي</th><th>المهاري</th><th>الاجتماعي</th><th>الكلي</th><th>الحالة</th></tr></thead>
+            <tbody>
+            {% for idx in indices %}
+            <tr>
+                <td>{{ idx.assessment.date|date:"Y/m/d" }}</td>
+                <td>{{ idx.medical_psychological_score }}%</td>
+                <td>{{ idx.behavioral_score }}%</td>
+                <td>{{ idx.skill_technical_score }}%</td>
+                <td>{{ idx.social_spiritual_score }}%</td>
+                <td><strong>{{ idx.total_score }}%</strong></td>
+                <td>
+                    {% if idx.status == "progressing" %}<span class="badge badge-success">تقدّم</span>
+                    {% elif idx.status == "stable" %}<span class="badge badge-warning">ثابت</span>
+                    {% else %}<span class="badge badge-danger">تراجع</span>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body" style="text-align:center;padding:40px;color:var(--gray-500);">لا توجد تقييمات لهذا المستفيد في الفترة المحددة.</div></div>
+{% endif %}
+{% endblock %}

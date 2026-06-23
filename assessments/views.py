@@ -1,6 +1,6 @@
 import json
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -147,7 +147,11 @@ def _save_activity_records(request, assessment, activities):
                         pass
 
         if has_data:
-            score_pct = (total_score / total_max * 100) if total_max > 0 else Decimal("0")
+            try:
+                score_pct = (total_score / total_max * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if total_max > 0 else Decimal("0")
+                score_pct = min(score_pct, Decimal("999.99"))
+            except (InvalidOperation, ZeroDivisionError):
+                score_pct = Decimal("0")
             ActivityRecord.objects.create(
                 assessment=assessment, activity=activity,
                 data=data, score=score_pct, max_score=Decimal("100"),
@@ -184,7 +188,11 @@ def _save_clinic_records(request, assessment, clinics):
                         pass
 
         if has_data:
-            score_pct = (total_score / total_max * 100) if total_max > 0 else Decimal("50")
+            try:
+                score_pct = (total_score / total_max * 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if total_max > 0 else Decimal("50")
+                score_pct = min(score_pct, Decimal("999.99"))
+            except (InvalidOperation, ZeroDivisionError):
+                score_pct = Decimal("50")
             ClinicRecord.objects.create(
                 assessment=assessment, clinic=clinic,
                 data=data, score=score_pct, max_score=Decimal("100"),

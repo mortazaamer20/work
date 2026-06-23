@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}تقرير {{ center.name }}{% endblock %}
+{% block page_title %}تقرير {{ center.name }}{% endblock %}
+{% block nav_reports %}active{% endblock %}
+{% block topbar_actions %}
+<div style="display:flex;gap:8px;">
+    <a href="{% url 'reports:center' %}?center={{ center.pk }}&date_from={{ date_from }}&date_to={{ date_to }}&export=excel" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    <a href="{% url 'reports:center' %}?center={{ center.pk }}&date_from={{ date_from }}&date_to={{ date_to }}&export=csv" class="btn btn-outline btn-sm"><i class="bi bi-filetype-csv"></i> CSV</a>
+    <a href="{% url 'reports:home' %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-right"></i> العودة</a>
+</div>
+{% endblock %}
+{% block content %}
+{% if activity_stats or clinic_stats %}
+<div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h2>أداء الأنشطة</h2></div>
+        <div class="card-body">
+            {% for s in activity_stats %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-200);">
+                <div>
+                    <strong>{{ s.activity__name }}</strong>
+                    <div style="font-size:0.75rem;color:var(--gray-500);">{{ s.count }} جلسة | {{ s.unique_beneficiaries }} مستفيد</div>
+                </div>
+                <div style="text-align:left;">
+                    <strong>{{ s.avg_score|floatformat:1 }}%</strong>
+                    <div class="progress-bar" style="width:80px;margin-top:4px;">
+                        <div class="fill {% if s.avg_score >= 60 %}green{% elif s.avg_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ s.avg_score|floatformat:0 }}%;"></div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="color:var(--gray-500);text-align:center;">لا توجد بيانات أنشطة</p>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h2>أداء العيادات</h2></div>
+        <div class="card-body">
+            {% for s in clinic_stats %}
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-200);">
+                <div>
+                    <strong>{{ s.clinic__name }}</strong>
+                    <div style="font-size:0.75rem;color:var(--gray-500);">{{ s.count }} جلسة | {{ s.unique_beneficiaries }} مستفيد</div>
+                </div>
+                <div style="text-align:left;">
+                    <strong>{{ s.avg_score|floatformat:1 }}%</strong>
+                    <div class="progress-bar" style="width:80px;margin-top:4px;">
+                        <div class="fill {% if s.avg_score >= 60 %}green{% elif s.avg_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ s.avg_score|floatformat:0 }}%;"></div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p style="color:var(--gray-500);text-align:center;">لا توجد عيادات لهذا المركز</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2>أفضل المستفيدين أداءً</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>#</th><th>الاسم</th><th>الرقم المرجعي</th><th>المتوسط</th><th>عدد الجلسات</th></tr></thead>
+            <tbody>
+            {% for p in beneficiary_performance %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><strong>{{ p.assessment__beneficiary__full_name }}</strong></td>
+                <td>{{ p.assessment__beneficiary__ref_number }}</td>
+                <td>
+                    <strong>{{ p.avg_score|floatformat:1 }}%</strong>
+                    <div class="progress-bar" style="width:60px;display:inline-block;vertical-align:middle;margin-right:8px;">
+                        <div class="fill {% if p.avg_score >= 60 %}green{% elif p.avg_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ p.avg_score|floatformat:0 }}%;"></div>
+                    </div>
+                </td>
+                <td>{{ p.total_sessions }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body" style="text-align:center;padding:40px;color:var(--gray-500);">لا توجد بيانات لهذا المركز في الفترة المحددة.</div></div>
+{% endif %}
+{% endblock %}

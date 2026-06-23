@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 
 
 class DailyAssessment(models.Model):
@@ -107,9 +107,12 @@ class ActivityRecord(models.Model):
 
     @property
     def percentage(self):
-        if self.max_score == 0:
+        if not self.max_score or self.max_score == 0:
             return Decimal("0")
-        return (self.score / self.max_score) * Decimal("100")
+        try:
+            return min((self.score / self.max_score) * Decimal("100"), Decimal("100"))
+        except Exception:
+            return Decimal("0")
 
 
 class ClinicRecord(models.Model):
@@ -141,9 +144,12 @@ class ClinicRecord(models.Model):
 
     @property
     def percentage(self):
-        if self.max_score == 0:
+        if not self.max_score or self.max_score == 0:
             return Decimal("0")
-        return (self.score / self.max_score) * Decimal("100")
+        try:
+            return min((self.score / self.max_score) * Decimal("100"), Decimal("100"))
+        except Exception:
+            return Decimal("0")
 
 
 class RehabilitationIndex(models.Model):
@@ -180,8 +186,12 @@ class RehabilitationIndex(models.Model):
     def __str__(self):
         return f"{self.assessment.beneficiary} - {self.assessment.date} - {self.total_score}%"
 
+    def _safe_decimal(self, value, max_val=Decimal("999.99")):
+        d = Decimal(str(round(value, 2)))
+        return min(max(d, Decimal("0")), max_val)
+
     def calculate(self):
-        self.behavioral_score = self.assessment.behavioral_score
+        behavioral_base = self.assessment.behavioral_score
 
         activity_records = self.assessment.activity_records.all()
         clinic_records = self.assessment.clinic_records.all()
@@ -196,29 +206,32 @@ class RehabilitationIndex(models.Model):
         for rec in activity_records:
             axis = rec.activity.center.axis
             if axis in axis_scores:
-                axis_scores[axis].append(float(rec.percentage))
+                pct = float(rec.percentage) if rec.max_score else 0
+                axis_scores[axis].append(min(pct, 100))
 
         for rec in clinic_records:
             axis = rec.clinic.center.axis
             if axis in axis_scores:
-                axis_scores[axis].append(float(rec.percentage))
+                pct = float(rec.percentage) if rec.max_score else 0
+                axis_scores[axis].append(min(pct, 100))
 
-        axis_scores["behavioral"].append(float(self.behavioral_score))
+        axis_scores["behavioral"].append(float(behavioral_base))
 
         def avg(lst):
             return sum(lst) / len(lst) if lst else 0
 
-        self.medical_psychological_score = Decimal(str(round(avg(axis_scores["medical_psychological"]), 2)))
-        self.skill_technical_score = Decimal(str(round(avg(axis_scores["skill_technical"]), 2)))
-        self.social_spiritual_score = Decimal(str(round(avg(axis_scores["social_spiritual"]), 2)))
-        self.behavioral_score = Decimal(str(round(avg(axis_scores["behavioral"]), 2)))
+        self.medical_psychological_score = self._safe_decimal(avg(axis_scores["medical_psychological"]))
+        self.skill_technical_score = self._safe_decimal(avg(axis_scores["skill_technical"]))
+        self.social_spiritual_score = self._safe_decimal(avg(axis_scores["social_spiritual"]))
+        self.behavioral_score = self._safe_decimal(avg(axis_scores["behavioral"]))
 
-        self.total_score = (
+        total = (
             self.medical_psychological_score * self.medical_weight / 100 +
             self.behavioral_score * self.behavioral_weight / 100 +
             self.skill_technical_score * self.skill_weight / 100 +
             self.social_spiritual_score * self.social_weight / 100
         )
+        self.total_score = total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
         if self.total_score >= 60:
             self.status = "progressing"

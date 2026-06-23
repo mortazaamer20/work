@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}تقرير فردي{% endblock %}
+{% block page_title %}تقرير فردي - اختيار المستفيد{% endblock %}
+{% block nav_reports %}active{% endblock %}
+{% block content %}
+<div class="card" style="max-width:600px;">
+    <div class="card-body">
+        <form method="get" action="{% url 'reports:individual' %}">
+            <div class="form-group">
+                <label>اختر المستفيد</label>
+                <select name="beneficiary" class="form-select" required>
+                    <option value="">-- اختر مستفيداً --</option>
+                    {% for b in beneficiaries %}
+                    <option value="{{ b.pk }}">{{ b.ref_number }} - {{ b.full_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>من تاريخ (اختياري)</label>
+                    <input type="date" name="date_from" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label>إلى تاريخ (اختياري)</label>
+                    <input type="date" name="date_to" class="form-input">
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-bar-chart-line"></i> عرض التقرير</button>
+                <a href="{% url 'reports:home' %}" class="btn btn-outline">العودة</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

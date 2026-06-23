@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}تقرير جماعي{% endblock %}
+{% block page_title %}تقرير جماعي{% endblock %}
+{% block nav_reports %}active{% endblock %}
+{% block topbar_actions %}
+<div style="display:flex;gap:8px;">
+    <a href="{% url 'reports:group' %}?date_from={{ date_from }}&date_to={{ date_to }}&status={{ status_filter }}&export=excel" class="btn btn-success btn-sm"><i class="bi bi-file-earmark-excel"></i> Excel</a>
+    <a href="{% url 'reports:group' %}?date_from={{ date_from }}&date_to={{ date_to }}&status={{ status_filter }}&export=csv" class="btn btn-outline btn-sm"><i class="bi bi-filetype-csv"></i> CSV</a>
+    <a href="{% url 'reports:home' %}" class="btn btn-outline btn-sm"><i class="bi bi-arrow-right"></i> العودة</a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="card" style="margin-bottom:20px;">
+    <div class="card-body">
+        <form method="get" style="display:flex;gap:12px;flex-wrap:wrap;align-items:end;">
+            <div class="form-group" style="margin:0;">
+                <label>من تاريخ</label>
+                <input type="date" name="date_from" value="{{ date_from }}" class="form-input">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>إلى تاريخ</label>
+                <input type="date" name="date_to" value="{{ date_to }}" class="form-input">
+            </div>
+            <div class="form-group" style="margin:0;">
+                <label>الحالة</label>
+                <select name="status" class="form-select">
+                    <option value="">الكل</option>
+                    <option value="active" {% if status_filter == "active" %}selected{% endif %}>نشط</option>
+                    <option value="discharged" {% if status_filter == "discharged" %}selected{% endif %}>خرج</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-bottom:16px;"><i class="bi bi-funnel"></i> فلترة</button>
+        </form>
+    </div>
+</div>
+
+{% if overall_stats.total_assessments %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary"><i class="bi bi-clipboard2-data"></i></div>
+        <div class="stat-info"><div class="value">{{ overall_stats.total_assessments }}</div><div class="label">إجمالي التقييمات</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon {% if overall_stats.avg_total >= 60 %}success{% elif overall_stats.avg_total >= 40 %}warning{% else %}danger{% endif %}"><i class="bi bi-speedometer2"></i></div>
+        <div class="stat-info"><div class="value">{{ overall_stats.avg_total|floatformat:1 }}%</div><div class="label">المتوسط العام</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon info"><i class="bi bi-heart-pulse"></i></div>
+        <div class="stat-info"><div class="value">{{ overall_stats.avg_medical|floatformat:1 }}%</div><div class="label">متوسط الطبي</div></div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon warning"><i class="bi bi-person-check"></i></div>
+        <div class="stat-info"><div class="value">{{ overall_stats.avg_behavioral|floatformat:1 }}%</div><div class="label">متوسط السلوكي</div></div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-bottom:24px;">
+    <div class="card">
+        <div class="card-header"><h2>توزيع الحالات</h2></div>
+        <div class="card-body" style="display:flex;gap:24px;justify-content:center;padding:24px;">
+            {% for s in status_distribution %}
+            <div style="text-align:center;">
+                <div style="font-size:2rem;font-weight:800;color:{% if s.status == 'progressing' %}var(--success){% elif s.status == 'stable' %}var(--warning){% else %}var(--danger){% endif %};">{{ s.count }}</div>
+                <div class="badge {% if s.status == 'progressing' %}badge-success{% elif s.status == 'stable' %}badge-warning{% else %}badge-danger{% endif %}" style="margin-top:8px;">
+                    {% if s.status == "progressing" %}تقدّم{% elif s.status == "stable" %}ثابت{% else %}تراجع{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header"><h2>متوسط المحاور</h2></div>
+        <div class="card-body">
+            {% with m=overall_stats.avg_medical b=overall_stats.avg_behavioral s=overall_stats.avg_skill so=overall_stats.avg_social %}
+            <div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:0.85rem;"><span>الطبي والنفسي</span><strong>{{ m|floatformat:1 }}%</strong></div><div class="progress-bar"><div class="fill green" style="width:{{ m|floatformat:0 }}%;"></div></div></div>
+            <div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:0.85rem;"><span>السلوكي</span><strong>{{ b|floatformat:1 }}%</strong></div><div class="progress-bar"><div class="fill green" style="width:{{ b|floatformat:0 }}%;"></div></div></div>
+            <div style="margin-bottom:10px;"><div style="display:flex;justify-content:space-between;font-size:0.85rem;"><span>المهاري</span><strong>{{ s|floatformat:1 }}%</strong></div><div class="progress-bar"><div class="fill green" style="width:{{ s|floatformat:0 }}%;"></div></div></div>
+            <div><div style="display:flex;justify-content:space-between;font-size:0.85rem;"><span>الاجتماعي</span><strong>{{ so|floatformat:1 }}%</strong></div><div class="progress-bar"><div class="fill green" style="width:{{ so|floatformat:0 }}%;"></div></div></div>
+            {% endwith %}
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header"><h2>أداء المستفيدين</h2></div>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>#</th><th>الاسم</th><th>المرجعي</th><th>المتوسط</th><th>التقييمات</th><th>الطبي</th><th>السلوكي</th><th>المهاري</th><th>الاجتماعي</th></tr></thead>
+            <tbody>
+            {% for p in per_beneficiary %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><a href="{% url 'reports:individual' %}?beneficiary={{ p.assessment__beneficiary__pk }}&date_from={{ date_from }}&date_to={{ date_to }}"><strong>{{ p.assessment__beneficiary__full_name }}</strong></a></td>
+                <td>{{ p.assessment__beneficiary__ref_number }}</td>
+                <td>
+                    <strong>{{ p.avg_score|floatformat:1 }}%</strong>
+                    <div class="progress-bar" style="width:60px;display:inline-block;vertical-align:middle;margin-right:8px;">
+                        <div class="fill {% if p.avg_score >= 60 %}green{% elif p.avg_score >= 40 %}yellow{% else %}red{% endif %}" style="width:{{ p.avg_score|floatformat:0 }}%;"></div>
+                    </div>
+                </td>
+                <td>{{ p.sessions }}</td>
+                <td>{{ p.avg_medical|floatformat:1 }}%</td>
+                <td>{{ p.avg_behavioral|floatformat:1 }}%</td>
+                <td>{{ p.avg_skill|floatformat:1 }}%</td>
+                <td>{{ p.avg_social|floatformat:1 }}%</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="card"><div class="card-body" style="text-align:center;padding:40px;color:var(--gray-500);">لا توجد تقييمات في الفترة المحددة.</div></div>
+{% endif %}
+{% endblock %}

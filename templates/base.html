@@ -42,6 +42,11 @@
                     <i class="bi bi-clipboard2-pulse"></i> التقييمات اليومية
                 </a>
                 {% endif %}
+                {% if user|can_view:"reports" %}
+                <a href="{% url 'reports:home' %}" class="nav-item {% block nav_reports %}{% endblock %}">
+                    <i class="bi bi-bar-chart-line"></i> التقارير والإحصائيات
+                </a>
+                {% endif %}
             </div>
             <div class="nav-section">
                 <div class="nav-section-title">الإعدادات</div>
