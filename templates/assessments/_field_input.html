@@ -1,0 +1,35 @@
+{% if field.field_type == "text" %}
+<input type="text" name="{{ name }}" class="form-input">
+{% elif field.field_type == "number" %}
+<input type="number" name="{{ name }}" class="form-input" step="0.01"{% if field.normal_min != None %} min="{{ field.normal_min }}"{% endif %}{% if field.normal_max != None %} max="{{ field.normal_max }}"{% endif %}>
+{% elif field.field_type == "rating" %}
+<select name="{{ name }}" class="form-select">
+    <option value="">-- اختر --</option>
+    <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+    <option value="4">4</option><option value="5">5</option>
+</select>
+{% elif field.field_type == "rating10" %}
+<select name="{{ name }}" class="form-select">
+    <option value="">-- اختر --</option>
+    <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+    <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
+</select>
+{% elif field.field_type == "boolean" %}
+<select name="{{ name }}" class="form-select">
+    <option value="">-- اختر --</option>
+    <option value="1">نعم</option><option value="0">لا</option>
+</select>
+{% elif field.field_type == "choice" %}
+<select name="{{ name }}" class="form-select">
+    <option value="">-- اختر --</option>
+    {% for choice in field.get_choices_list %}<option value="{{ choice }}">{{ choice }}</option>{% endfor %}
+</select>
+{% elif field.field_type == "date" %}
+<input type="date" name="{{ name }}" class="form-input">
+{% elif field.field_type == "time" %}
+<input type="time" name="{{ name }}" class="form-input">
+{% elif field.field_type == "textarea" %}
+<textarea name="{{ name }}" class="form-input" rows="2"></textarea>
+{% else %}
+<input type="text" name="{{ name }}" class="form-input">
+{% endif %}

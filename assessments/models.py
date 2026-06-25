@@ -3,48 +3,22 @@ from django.conf import settings
 
 
 class DailyAssessment(models.Model):
-    ATTENDANCE_CHOICES = [
-        ("on_time", "حاضر في الوقت"),
-        ("late", "حاضر متأخر"),
-        ("absent_excused", "غائب بعذر"),
-        ("absent", "غائب"),
-    ]
-    MOOD_CHOICES = [
-        ("stable", "مستقر"),
-        ("anxious", "قلق"),
-        ("withdrawn", "منطوٍ"),
-        ("sad", "حزين ومنطوٍ"),
-        ("verbal_aggression", "عدواني لفظياً"),
-        ("physical_aggression", "عدواني جسدياً"),
-        ("agitated", "قلق ومتوتر"),
-    ]
-    APPEARANCE_CHOICES = [
-        ("excellent", "ملتزم بالزي الموحد ونظيف بالكامل"),
-        ("good", "ملتزم أو تبدو عليه علامات إهمال"),
-        ("poor", "غير ملتزم بالنظافة الشخصية"),
-    ]
-    INTERACTION_CHOICES = [
-        (1, "رافض المشاركة"),
-        (2, "قليل الانسجام ويحرّك الفوضى"),
-        (3, "مشارك ومتوسط الأداء"),
-        (4, "مبادر ونشيط وساعد زملاءه"),
-        (5, "قائد نشيط يساعد زملاءه"),
-    ]
+    """مُجمِّع التقييم اليومي لمستفيد واحد في يوم واحد.
 
+    يُنشأ تلقائياً عند أول إدخال لأي نشاط، ويُجمِّع سجلات الأنشطة والعيادات
+    التي يدخلها مسؤولو الأنشطة كلٌّ على حدة. الحالة العامة (الحضور/المزاج/...)
+    صارت تُسجَّل لكل نشاط داخل ActivityRecord.
+    """
     beneficiary = models.ForeignKey(
         "beneficiaries.Beneficiary", on_delete=models.CASCADE,
         verbose_name="المستفيد", related_name="daily_assessments"
     )
     date = models.DateField("التاريخ")
-    attendance = models.CharField("الحضور", max_length=20, choices=ATTENDANCE_CHOICES)
-    interaction_level = models.PositiveSmallIntegerField("مستوى التفاعل والمشاركة", choices=INTERACTION_CHOICES)
-    mood = models.CharField("الحالة المزاجية", max_length=30, choices=MOOD_CHOICES)
-    appearance = models.CharField("المظهر والنظافة", max_length=20, choices=APPEARANCE_CHOICES)
     notes = models.TextField("ملاحظات عامة", blank=True)
 
     assessed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
-        verbose_name="المقيّم", related_name="daily_assessments"
+        verbose_name="أنشأه", related_name="daily_assessments"
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -60,21 +34,9 @@ class DailyAssessment(models.Model):
 
     @property
     def behavioral_score(self):
-        score = 0.0
-        if self.attendance in ("on_time",):
-            score += 30
-        elif self.attendance == "late":
-            score += 15
-        score += float(self.interaction_level) * 8
-        if self.mood == "stable":
-            score += 20
-        elif self.mood in ("anxious", "sad", "withdrawn"):
-            score += 10
-        if self.appearance == "excellent":
-            score += 10
-        elif self.appearance == "good":
-            score += 5
-        return min(score, 100.0)
+        """متوسط درجات الحالة العامة عبر كل سجلات الأنشطة لهذا اليوم."""
+        vals = [r.behavioral_score for r in self.activity_records.all() if r.behavioral_score is not None]
+        return round(sum(vals) / len(vals), 2) if vals else 0.0
 
 
 class ActivityRecord(models.Model):
@@ -87,8 +49,10 @@ class ActivityRecord(models.Model):
         verbose_name="النشاط", related_name="records"
     )
     data = models.JSONField("البيانات", default=dict)
+    general_data = models.JSONField("بيانات الحالة العامة", default=dict, blank=True)
     score = models.FloatField("الدرجة", default=0)
     max_score = models.FloatField("الدرجة القصوى", default=100)
+    behavioral_score = models.FloatField("درجة الحالة العامة", default=0)
     notes = models.TextField("ملاحظات", blank=True)
     recorded_by = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True,
@@ -186,8 +150,6 @@ class RehabilitationIndex(models.Model):
         return f"{self.assessment.beneficiary} - {self.assessment.date} - {self.total_score}%"
 
     def calculate(self):
-        behavioral_base = self.assessment.behavioral_score
-
         activity_records = self.assessment.activity_records.all()
         clinic_records = self.assessment.clinic_records.all()
 
@@ -202,13 +164,14 @@ class RehabilitationIndex(models.Model):
             axis = rec.activity.center.axis
             if axis in axis_scores:
                 axis_scores[axis].append(min(rec.percentage, 100.0))
+            # الحالة العامة لكل جلسة تساهم في المحور السلوكي
+            if rec.behavioral_score:
+                axis_scores["behavioral"].append(min(float(rec.behavioral_score), 100.0))
 
         for rec in clinic_records:
             axis = rec.clinic.center.axis
             if axis in axis_scores:
                 axis_scores[axis].append(min(rec.percentage, 100.0))
-
-        axis_scores["behavioral"].append(float(behavioral_base))
 
         def avg(lst):
             return sum(lst) / len(lst) if lst else 0.0

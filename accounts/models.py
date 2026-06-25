@@ -84,6 +84,10 @@ class User(AbstractUser):
     assigned_centers = models.ManyToManyField(
         "centers.Center", verbose_name="المراكز المعيّنة", blank=True,
     )
+    assigned_activities = models.ManyToManyField(
+        "centers.Activity", verbose_name="الأنشطة المعيّنة", blank=True,
+        help_text="عيّن أنشطة محددة لمسؤول النشاط؛ اتركها فارغة لمنح صلاحية المركز بالكامل"
+    )
     is_active = models.BooleanField("نشط", default=True)
 
     objects = UserManager()
@@ -108,6 +112,33 @@ class User(AbstractUser):
                 return role_centers
         from centers.models import Center
         return Center.objects.none()
+
+    def get_accessible_activities(self):
+        """الأنشطة التي يحق للمستخدم إدخال/عرض بياناتها (هرمياً).
+
+        - المدير العام (superuser): كل الأنشطة.
+        - مسؤول نشاط (assigned_activities محددة): أنشطته فقط.
+        - مسؤول مركز (assigned_centers / role.centers): كل أنشطة مراكزه.
+        """
+        from centers.models import Activity
+        if self.is_superuser:
+            return Activity.objects.filter(is_active=True)
+        own = self.assigned_activities.filter(is_active=True)
+        if own.exists():
+            return own
+        centers = self.get_accessible_centers()
+        return Activity.objects.filter(center__in=centers, is_active=True)
+
+    def get_accessible_clinics(self):
+        """العيادات تتبع صلاحية المركز (لا تُسنَد فردياً)."""
+        from centers.models import Clinic
+        if self.is_superuser:
+            return Clinic.objects.filter(is_active=True)
+        # مسؤول النشاط المحدد بنشاط فقط لا يصل للعيادات
+        if self.assigned_activities.exists():
+            return Clinic.objects.none()
+        centers = self.get_accessible_centers()
+        return Clinic.objects.filter(center__in=centers, is_active=True)
 
     def has_resource_perm(self, resource, action):
         if self.is_superuser:

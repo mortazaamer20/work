@@ -55,6 +55,11 @@
                     <i class="bi bi-building"></i> المراكز والأنشطة
                 </a>
                 {% endif %}
+                {% if user|can_view:"settings" %}
+                <a href="{% url 'centers:general_field_list' %}" class="nav-item {% block nav_general_fields %}{% endblock %}">
+                    <i class="bi bi-ui-checks"></i> حقول الاستمارة العامة
+                </a>
+                {% endif %}
                 {% if user|can_view:"users" %}
                 <a href="{% url 'accounts:user_list' %}" class="nav-item {% block nav_users %}{% endblock %}">
                     <i class="bi bi-person-gear"></i> المستخدمون

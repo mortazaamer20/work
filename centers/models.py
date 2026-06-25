@@ -1,6 +1,48 @@
 from django.db import models
 
 
+class GeneralField(models.Model):
+    """حقول الحالة العامة للمستفيد في الاستمارة اليومية (الحضور، المزاج، ...).
+
+    قابلة للتعديل والإضافة والحذف من قبل مدير النظام، ويملؤها كل مسؤول نشاط
+    لجلسته. تساهم في حساب المحور السلوكي لمؤشر التأهيل.
+    """
+    FIELD_TYPES = [
+        ("text", "نص"),
+        ("number", "رقم"),
+        ("rating", "تقييم (1-5)"),
+        ("rating10", "تقييم (1-10)"),
+        ("boolean", "نعم/لا"),
+        ("choice", "اختيار"),
+        ("date", "تاريخ"),
+        ("time", "وقت"),
+        ("textarea", "نص طويل"),
+    ]
+
+    name = models.CharField("اسم الحقل", max_length=200)
+    field_key = models.SlugField("مفتاح الحقل", max_length=200, unique=True, allow_unicode=True)
+    field_type = models.CharField("نوع الحقل", max_length=20, choices=FIELD_TYPES, default="rating")
+    choices_text = models.TextField("الخيارات", blank=True, help_text="خيار واحد في كل سطر (لنوع الاختيار)")
+    is_required = models.BooleanField("مطلوب", default=True)
+    max_score = models.FloatField("الدرجة القصوى", default=5, help_text="تُستخدم في حساب المحور السلوكي")
+    counts_in_score = models.BooleanField("يُحتسب في المؤشر السلوكي", default=True)
+    is_active = models.BooleanField("نشط", default=True)
+    order = models.PositiveIntegerField("الترتيب", default=0)
+
+    class Meta:
+        verbose_name = "حقل عام"
+        verbose_name_plural = "الحقول العامة للاستمارة"
+        ordering = ["order", "name"]
+
+    def __str__(self):
+        return self.name
+
+    def get_choices_list(self):
+        if not self.choices_text:
+            return []
+        return [c.strip() for c in self.choices_text.split("\n") if c.strip()]
+
+
 class Center(models.Model):
     name = models.CharField("اسم المركز", max_length=200, unique=True)
     slug = models.SlugField("المعرّف", max_length=200, unique=True, allow_unicode=True)

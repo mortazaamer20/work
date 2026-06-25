@@ -3,8 +3,45 @@ from django.contrib import messages
 from django.forms import inlineformset_factory
 
 from accounts.views import require_perm
-from .models import Center, Activity, ActivityField, Clinic, ClinicField
-from .forms import CenterForm, ActivityForm, ActivityFieldForm, ClinicForm, ClinicFieldForm
+from .models import Center, Activity, ActivityField, Clinic, ClinicField, GeneralField
+from .forms import CenterForm, ActivityForm, ActivityFieldForm, ClinicForm, ClinicFieldForm, GeneralFieldForm
+
+
+@require_perm("settings", "view")
+def general_field_list(request):
+    fields = GeneralField.objects.all()
+    return render(request, "centers/general_field_list.html", {"fields": fields})
+
+
+@require_perm("settings", "add")
+def general_field_create(request):
+    form = GeneralFieldForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "تمت إضافة الحقل العام")
+        return redirect("centers:general_field_list")
+    return render(request, "centers/general_field_form.html", {"form": form, "title": "إضافة حقل عام"})
+
+
+@require_perm("settings", "edit")
+def general_field_edit(request, pk):
+    field = get_object_or_404(GeneralField, pk=pk)
+    form = GeneralFieldForm(request.POST or None, instance=field)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "تم تحديث الحقل العام")
+        return redirect("centers:general_field_list")
+    return render(request, "centers/general_field_form.html", {"form": form, "title": "تعديل حقل عام", "editing": True})
+
+
+@require_perm("settings", "delete")
+def general_field_delete(request, pk):
+    field = get_object_or_404(GeneralField, pk=pk)
+    if request.method == "POST":
+        field.delete()
+        messages.success(request, "تم حذف الحقل العام")
+        return redirect("centers:general_field_list")
+    return render(request, "centers/general_field_confirm_delete.html", {"field": field})
 
 
 @require_perm("centers", "view")

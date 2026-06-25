@@ -1,0 +1,41 @@
+{% extends "base.html" %}{% load perm_tags %}
+{% block title %}الحقول العامة للاستمارة{% endblock %}
+{% block page_title %}الحقول العامة للاستمارة اليومية{% endblock %}
+{% block nav_centers %}active{% endblock %}
+{% block topbar_actions %}
+{% if user|can_add:"settings" %}
+<a href="{% url 'centers:general_field_create' %}" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> حقل جديد</a>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="card">
+    <div class="card-body">
+        <p style="color:var(--gray-600);margin-bottom:14px;">هذه الحقول يملؤها كل مسؤول نشاط عن الحالة العامة للمستفيد في جلسته (الحضور، المزاج، ...)، وتساهم في حساب المحور السلوكي للمؤشر.</p>
+        {% if fields %}
+        <div class="table-wrap">
+        <table>
+            <thead><tr><th>الاسم</th><th>المفتاح</th><th>النوع</th><th>الدرجة القصوى</th><th>يُحتسب؟</th><th>نشط؟</th><th></th></tr></thead>
+            <tbody>
+            {% for f in fields %}
+            <tr>
+                <td>{{ f.name }}</td>
+                <td dir="ltr">{{ f.field_key }}</td>
+                <td>{{ f.get_field_type_display }}</td>
+                <td>{{ f.max_score }}</td>
+                <td>{% if f.counts_in_score %}<span class="badge badge-success">نعم</span>{% else %}<span class="badge badge-gray">لا</span>{% endif %}</td>
+                <td>{% if f.is_active %}<span class="badge badge-success">نشط</span>{% else %}<span class="badge badge-gray">معطّل</span>{% endif %}</td>
+                <td style="white-space:nowrap;">
+                    {% if user|can_edit:"settings" %}<a href="{% url 'centers:general_field_edit' f.pk %}" class="btn btn-outline btn-sm"><i class="bi bi-pencil"></i></a>{% endif %}
+                    {% if user|can_delete:"settings" %}<a href="{% url 'centers:general_field_delete' f.pk %}" class="btn btn-danger btn-sm"><i class="bi bi-trash"></i></a>{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+        {% else %}
+        <p style="color:var(--gray-500);text-align:center;padding:24px;">لا توجد حقول عامة. أضف حقولاً مثل الحضور والمزاج.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

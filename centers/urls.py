@@ -4,6 +4,10 @@ from . import views
 app_name = "centers"
 
 urlpatterns = [
+    path("general-fields/", views.general_field_list, name="general_field_list"),
+    path("general-fields/create/", views.general_field_create, name="general_field_create"),
+    path("general-fields/<int:pk>/edit/", views.general_field_edit, name="general_field_edit"),
+    path("general-fields/<int:pk>/delete/", views.general_field_delete, name="general_field_delete"),
     path("", views.center_list, name="list"),
     path("create/", views.center_create, name="center_create"),
     path("<int:pk>/edit/", views.center_edit, name="center_edit"),

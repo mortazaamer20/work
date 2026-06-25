@@ -15,11 +15,9 @@
             <table>
                 <tr><th style="width:140px;">المستفيد</th><td><a href="{% url 'beneficiaries:detail' assessment.beneficiary.pk %}">{{ assessment.beneficiary.full_name }}</a></td></tr>
                 <tr><th>التاريخ</th><td>{{ assessment.date|date:"Y/m/d" }}</td></tr>
-                <tr><th>الحضور</th><td>{{ assessment.get_attendance_display }}</td></tr>
-                <tr><th>التفاعل</th><td>{{ assessment.interaction_level }}/5</td></tr>
-                <tr><th>المزاج</th><td>{{ assessment.get_mood_display }}</td></tr>
-                <tr><th>المظهر</th><td>{{ assessment.get_appearance_display }}</td></tr>
-                <tr><th>المقيّم</th><td>{{ assessment.assessed_by.full_name|default:"—" }}</td></tr>
+                <tr><th>عدد الأنشطة المقيَّمة</th><td>{{ activity_records|length }}</td></tr>
+                <tr><th>عدد العيادات</th><td>{{ clinic_records|length }}</td></tr>
+                <tr><th>أنشأه</th><td>{{ assessment.assessed_by.full_name|default:"—" }}</td></tr>
             </table>
             {% if assessment.notes %}<div style="margin-top:12px;"><strong>ملاحظات:</strong> {{ assessment.notes }}</div>{% endif %}
         </div>
@@ -86,6 +84,7 @@
                 <div>
                     <strong>{{ rec.activity.name }}</strong>
                     <span class="record-center">{{ rec.activity.center.name }}</span>
+                    {% if rec.recorded_by %}<span class="record-center"><i class="bi bi-person"></i> {{ rec.recorded_by.full_name }}</span>{% endif %}
                 </div>
                 <div style="text-align:left;min-width:110px;">
                     <strong>{{ rec.score }}%</strong>
@@ -94,6 +93,13 @@
                     </div>
                 </div>
             </div>
+            {% if rec.general_items %}
+            <div class="record-items">
+                {% for item in rec.general_items %}
+                <div class="record-item"><span class="ri-label">{{ item.label }}</span><span class="ri-value">{{ item.value }}</span></div>
+                {% endfor %}
+            </div>
+            {% endif %}
             {% if rec.detail_items %}
             <div class="record-items">
                 {% for item in rec.detail_items %}

@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from accounts.models import Permission, Role, User
-from centers.models import Center, Activity, ActivityField, Clinic, ClinicField
+from centers.models import Center, Activity, ActivityField, Clinic, ClinicField, GeneralField
 
 
 class Command(BaseCommand):
@@ -11,9 +11,41 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self._create_permissions()
         self._create_centers()
+        self._create_general_fields()
         self._create_default_roles()
         self._create_admin()
+        self._create_demo_supervisors()
         self.stdout.write(self.style.SUCCESS("تم تحميل البيانات بنجاح!"))
+
+    def _create_general_fields(self):
+        fields = [
+            {"name": "الحضور والالتزام بالوقت", "field_key": "attendance", "field_type": "rating", "max_score": 5, "order": 1},
+            {"name": "مستوى التفاعل والمشاركة", "field_key": "interaction", "field_type": "rating", "max_score": 5, "order": 2},
+            {"name": "الحالة المزاجية", "field_key": "mood", "field_type": "rating", "max_score": 5, "order": 3},
+            {"name": "المظهر والنظافة الشخصية", "field_key": "appearance", "field_type": "rating", "max_score": 5, "order": 4},
+        ]
+        for f in fields:
+            GeneralField.objects.get_or_create(
+                field_key=f["field_key"],
+                defaults={
+                    "name": f["name"], "field_type": f["field_type"],
+                    "max_score": f["max_score"], "order": f["order"],
+                    "counts_in_score": True, "is_active": True,
+                },
+            )
+        self.stdout.write(f"  الحقول العامة: {GeneralField.objects.count()}")
+
+    def _create_demo_supervisors(self):
+        """مستخدم تجريبي لمسؤول نشاط (نشاط واحد فقط) لإظهار الصلاحيات الهرمية."""
+        trainer_role = Role.objects.filter(name="مدرّب نشاط").first()
+        first_activity = Activity.objects.order_by("center__order", "order").first()
+        if trainer_role and first_activity and not User.objects.filter(username="trainer").exists():
+            u = User.objects.create_user(
+                username="trainer", password="trainer123",
+                full_name=f"مسؤول نشاط - {first_activity.name}", role=trainer_role,
+            )
+            u.assigned_activities.add(first_activity)
+            self.stdout.write("  مستخدم تجريبي (مسؤول نشاط): trainer / trainer123")
 
     def _create_permissions(self):
         for resource, _ in Permission.RESOURCE_CHOICES:

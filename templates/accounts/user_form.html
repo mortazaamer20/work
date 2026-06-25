@@ -9,7 +9,7 @@
             {% csrf_token %}
             <div class="form-grid">
                 {% for field in form %}
-                {% if field.name != "assigned_centers" %}
+                {% if field.name != "assigned_centers" and field.name != "assigned_activities" %}
                 <div class="form-group">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                     {{ field }}
@@ -20,9 +20,19 @@
             </div>
             {% if form.assigned_centers %}
             <div class="form-group" style="margin-top:16px;">
-                <label>المراكز المعيّنة</label>
+                <label>المراكز المعيّنة <small style="color:var(--gray-500);">(لمسؤول المركز — يصل لكل أنشطة المركز)</small></label>
                 <div style="display:flex;flex-wrap:wrap;gap:12px;padding:8px 0;">
                     {% for checkbox in form.assigned_centers %}
+                    <label style="display:flex;align-items:center;gap:6px;font-size:0.9rem;">{{ checkbox }}</label>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            {% if form.assigned_activities %}
+            <div class="form-group" style="margin-top:16px;">
+                <label>الأنشطة المعيّنة <small style="color:var(--gray-500);">(لمسؤول النشاط — يصل لنشاطه فقط؛ تتجاوز صلاحية المركز)</small></label>
+                <div style="display:flex;flex-direction:column;gap:8px;padding:8px 0;max-height:260px;overflow:auto;">
+                    {% for checkbox in form.assigned_activities %}
                     <label style="display:flex;align-items:center;gap:6px;font-size:0.9rem;">{{ checkbox }}</label>
                     {% endfor %}
                 </div>

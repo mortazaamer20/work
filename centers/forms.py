@@ -1,5 +1,20 @@
 from django import forms
-from .models import Center, Activity, ActivityField, Clinic, ClinicField
+from .models import Center, Activity, ActivityField, Clinic, ClinicField, GeneralField
+
+
+class GeneralFieldForm(forms.ModelForm):
+    class Meta:
+        model = GeneralField
+        fields = ["name", "field_key", "field_type", "choices_text", "is_required",
+                  "max_score", "counts_in_score", "is_active", "order"]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-input"}),
+            "field_key": forms.TextInput(attrs={"class": "form-input", "dir": "ltr"}),
+            "field_type": forms.Select(attrs={"class": "form-select"}),
+            "choices_text": forms.Textarea(attrs={"class": "form-input", "rows": 3}),
+            "max_score": forms.NumberInput(attrs={"class": "form-input"}),
+            "order": forms.NumberInput(attrs={"class": "form-input"}),
+        }
 
 
 class CenterForm(forms.ModelForm):

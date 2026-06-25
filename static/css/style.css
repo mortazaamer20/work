@@ -178,6 +178,28 @@ a:hover { color: var(--primary-dark); }
 .card-header h2 { font-size: 1rem; font-weight: 700; }
 .card-body { padding: 20px; }
 
+/* Assessment entry blocks */
+.entry-block {
+    margin-bottom: 16px;
+    padding: 14px;
+    background: var(--gray-50);
+    border: 1px solid var(--gray-200);
+    border-radius: 10px;
+}
+.entry-title { margin-bottom: 10px; color: var(--gray-800); font-size: 1rem; font-weight: 700; }
+.entry-sub {
+    margin: 12px 0 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--primary);
+    border-right: 3px solid var(--primary);
+    padding-right: 8px;
+}
+.form-hint { margin-top: 12px; font-size: 0.82rem; color: var(--gray-500); }
+
+/* Horizontal scroll wrapper for wide tables on small screens */
+.table-wrap { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
 /* Stats grid */
 .stats-grid {
     display: grid;
@@ -602,8 +624,36 @@ tr:hover td { background: var(--gray-50); }
 @media (max-width: 640px) {
     .stats-grid { grid-template-columns: 1fr; }
     .form-grid { grid-template-columns: 1fr; }
-    .page-content { padding: 16px; }
+    .formset-row .form-grid { grid-template-columns: 1fr; }
+    .page-content { padding: 14px; }
     .perm-grid { grid-template-columns: 1fr; }
+
+    /* السماح بانسياب أزرار شريط العنوان أسفل العنوان بدل تداخلها */
+    .topbar {
+        flex-wrap: wrap;
+        height: auto;
+        padding: 10px 14px;
+        gap: 8px;
+    }
+    .topbar .page-title { font-size: 1.05rem; }
+    .topbar > div:last-child,
+    .topbar form { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; }
+
+    /* الجداول العريضة: تمرير أفقي بدل كسر التخطيط */
+    .card-body > table,
+    .table-wrap > table { min-width: 520px; }
+    .card-body { overflow-x: auto; }
+
+    .btn { padding: 8px 12px; font-size: 0.85rem; }
+    .btn-sm { padding: 5px 9px; }
+    .score-gauge { margin-left: auto; margin-right: auto; }
+    .record-head { flex-wrap: wrap; gap: 8px; }
+}
+
+/* منع التمرير الأفقي للصفحة بالكامل على الجوال */
+@media (max-width: 1024px) {
+    html, body { overflow-x: hidden; }
+    .main-content { max-width: 100%; }
 }
 
 /* Chart placeholder */
