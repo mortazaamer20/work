@@ -1,6 +1,11 @@
+import random
+from datetime import date, timedelta
+
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from accounts.models import Permission, Role, User
+from beneficiaries.models import Beneficiary
+from assessments.models import DailyAssessment, ActivityRecord, ClinicRecord, RehabilitationIndex
 from centers.models import Center, Activity, ActivityField, Clinic, ClinicField, GeneralField
 
 
@@ -15,6 +20,8 @@ class Command(BaseCommand):
         self._create_default_roles()
         self._create_admin()
         self._create_demo_supervisors()
+        self._create_beneficiaries()
+        self._create_assessments()
         self.stdout.write(self.style.SUCCESS("تم تحميل البيانات بنجاح!"))
 
     def _create_general_fields(self):
@@ -46,6 +53,136 @@ class Command(BaseCommand):
             )
             u.assigned_activities.add(first_activity)
             self.stdout.write("  مستخدم تجريبي (مسؤول نشاط): trainer / trainer123")
+
+    def _create_beneficiaries(self):
+        if Beneficiary.objects.exists():
+            self.stdout.write(f"  المستفيدون موجودون: {Beneficiary.objects.count()}")
+            return
+        admin = User.objects.filter(is_superuser=True).first()
+        names = [
+            ("أحمد محمد علي", "male", "1995-03-15"),
+            ("حسين كريم جابر", "male", "1990-07-22"),
+            ("علي عبدالله حسن", "male", "1988-11-01"),
+            ("محمد صالح عبدالرزاق", "male", "1992-05-10"),
+            ("عمار فاضل كاظم", "male", "1998-01-25"),
+            ("حيدر ناصر محمود", "male", "1985-09-14"),
+            ("مصطفى جعفر سعيد", "male", "1993-12-03"),
+            ("كرار حسن عبدالأمير", "male", "1997-06-18"),
+            ("سجاد مهدي عباس", "male", "1991-04-07"),
+            ("يوسف طارق رشيد", "male", "1996-08-30"),
+        ]
+        today = date.today()
+        for i, (name, gender, dob) in enumerate(names, 1):
+            Beneficiary.objects.create(
+                ref_number=f"BEN-2025-{i:04d}",
+                full_name=name,
+                gender=gender,
+                date_of_birth=dob,
+                national_id=f"1234567{i:03d}",
+                phone=f"077012345{i:02d}",
+                admission_date=today - timedelta(days=random.randint(30, 180)),
+                status="active",
+                admission_reason="برنامج تأهيل وتعافي",
+                created_by=admin,
+            )
+        self.stdout.write(f"  المستفيدون: {Beneficiary.objects.count()}")
+
+    def _create_assessments(self):
+        if DailyAssessment.objects.exists():
+            self.stdout.write(f"  التقييمات موجودة: {DailyAssessment.objects.count()}")
+            return
+        admin = User.objects.filter(is_superuser=True).first()
+        beneficiaries = list(Beneficiary.objects.filter(status="active"))
+        activities = list(Activity.objects.filter(is_active=True).select_related("center").prefetch_related("fields"))
+        clinics = list(Clinic.objects.filter(is_active=True).select_related("center").prefetch_related("fields"))
+        general_fields = list(GeneralField.objects.filter(is_active=True))
+
+        today = date.today()
+        for day_offset in range(7):
+            d = today - timedelta(days=day_offset)
+            for ben in beneficiaries[:6]:
+                assessment, _ = DailyAssessment.objects.get_or_create(
+                    beneficiary=ben, date=d,
+                    defaults={"assessed_by": admin, "notes": "تقييم تجريبي"},
+                )
+                chosen_activities = random.sample(activities, min(random.randint(2, 5), len(activities)))
+                for act in chosen_activities:
+                    data = {}
+                    total_s, total_m = 0.0, 0.0
+                    for f in act.fields.all():
+                        if f.field_type == "rating":
+                            v = random.randint(2, 5)
+                            data[f.field_key] = str(v)
+                            total_s += v
+                            total_m += float(f.max_score)
+                        elif f.field_type == "number":
+                            v = round(random.uniform(1, float(f.max_score) * 0.8), 1)
+                            data[f.field_key] = str(v)
+                            total_s += v
+                            total_m += float(f.max_score)
+                        elif f.field_type == "text":
+                            data[f.field_key] = "جيد"
+                    general_data = {}
+                    g_total, g_max = 0.0, 0.0
+                    for gf in general_fields:
+                        v = random.randint(2, 5)
+                        general_data[gf.field_key] = str(v)
+                        if gf.counts_in_score:
+                            g_total += v
+                            g_max += float(gf.max_score)
+                    behav = round(g_total / g_max * 100, 2) if g_max > 0 else 0.0
+                    score_pct = round(total_s / total_m * 100, 2) if total_m > 0 else 0.0
+                    ActivityRecord.objects.update_or_create(
+                        assessment=assessment, activity=act,
+                        defaults={
+                            "data": data, "general_data": general_data,
+                            "score": min(score_pct, 100.0), "max_score": 100,
+                            "behavioral_score": behav,
+                            "notes": "", "recorded_by": admin,
+                        },
+                    )
+                chosen_clinics = random.sample(clinics, min(random.randint(1, 3), len(clinics)))
+                for cli in chosen_clinics:
+                    data = {}
+                    total_s, total_m = 0.0, 0.0
+                    for f in cli.fields.all():
+                        if f.field_type == "rating":
+                            v = random.randint(2, 5)
+                            data[f.field_key] = str(v)
+                            total_s += v
+                            total_m += 5.0
+                        elif f.field_type == "number":
+                            if f.normal_min is not None and f.normal_max is not None:
+                                v = round(random.uniform(float(f.normal_min), float(f.normal_max) * 1.1), 1)
+                                data[f.field_key] = str(v)
+                                if float(f.normal_min) <= v <= float(f.normal_max):
+                                    total_s += 1.0
+                                total_m += 1.0
+                            else:
+                                v = round(random.uniform(50, 90), 1)
+                                data[f.field_key] = str(v)
+                        elif f.field_type == "choice":
+                            choices = [c.strip() for c in (f.choices_text or "").split("\n") if c.strip()]
+                            data[f.field_key] = random.choice(choices) if choices else ""
+                        elif f.field_type in ("text", "textarea"):
+                            data[f.field_key] = "طبيعي"
+                        elif f.field_type == "date":
+                            data[f.field_key] = str(d)
+                    score_pct = round(total_s / total_m * 100, 2) if total_m > 0 else 50.0
+                    ClinicRecord.objects.update_or_create(
+                        assessment=assessment, clinic=cli,
+                        defaults={
+                            "data": data, "score": min(score_pct, 100.0), "max_score": 100,
+                            "notes": "", "recorded_by": admin,
+                        },
+                    )
+                rehab_index, _ = RehabilitationIndex.objects.get_or_create(assessment=assessment)
+                rehab_index.calculate()
+
+        self.stdout.write(f"  التقييمات: {DailyAssessment.objects.count()}")
+        self.stdout.write(f"  سجلات الأنشطة: {ActivityRecord.objects.count()}")
+        self.stdout.write(f"  سجلات العيادات: {ClinicRecord.objects.count()}")
+        self.stdout.write(f"  مؤشرات التأهيل: {RehabilitationIndex.objects.count()}")
 
     def _create_permissions(self):
         for resource, _ in Permission.RESOURCE_CHOICES:

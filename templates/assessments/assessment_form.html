@@ -42,6 +42,7 @@
         </div>
         <div class="accordion-body open">
             {% for activity in group.list %}
+            {% with act_pk=activity.pk|stringformat:"s" %}
             <div class="entry-block">
                 <h4 class="entry-title">{{ activity.name }}</h4>
 
@@ -51,7 +52,9 @@
                     {% for field in general_fields %}
                     <div class="form-group">
                         <label>{{ field.name }}{% if field.is_required %} <span style="color:var(--danger);">*</span>{% endif %}</label>
-                        {% include "assessments/_field_input.html" with name="activity_"|add:activity.pk|stringformat:"s"|add:"___g_"|add:field.field_key field=field %}
+                        {% with field_name="activity_"|add:act_pk|add:"___g_"|add:field.field_key %}
+                        {% include "assessments/_field_input.html" with name=field_name field=field %}
+                        {% endwith %}
                     </div>
                     {% endfor %}
                 </div>
@@ -63,7 +66,9 @@
                     {% for field in activity.fields.all %}
                     <div class="form-group">
                         <label>{{ field.name }}{% if field.is_required %} <span style="color:var(--danger);">*</span>{% endif %}</label>
-                        {% include "assessments/_field_input.html" with name="activity_"|add:activity.pk|stringformat:"s"|add:"_"|add:field.field_key field=field %}
+                        {% with field_name="activity_"|add:act_pk|add:"_"|add:field.field_key %}
+                        {% include "assessments/_field_input.html" with name=field_name field=field %}
+                        {% endwith %}
                     </div>
                     {% endfor %}
                 </div>
@@ -74,6 +79,7 @@
                     <textarea name="activity_{{ activity.pk }}_notes" class="form-input" rows="1"></textarea>
                 </div>
             </div>
+            {% endwith %}
             {% endfor %}
         </div>
     </div>
@@ -88,13 +94,16 @@
         </div>
         <div class="accordion-body open">
             {% for clinic in group.list %}
+            {% with cli_pk=clinic.pk|stringformat:"s" %}
             <div class="entry-block">
                 <h4 class="entry-title">{{ clinic.name }}</h4>
                 <div class="form-grid">
                     {% for field in clinic.fields.all %}
                     <div class="form-group">
                         <label>{{ field.name }}{% if field.unit %} ({{ field.unit }}){% endif %}{% if field.is_required %} <span style="color:var(--danger);">*</span>{% endif %}</label>
-                        {% include "assessments/_field_input.html" with name="clinic_"|add:clinic.pk|stringformat:"s"|add:"_"|add:field.field_key field=field %}
+                        {% with field_name="clinic_"|add:cli_pk|add:"_"|add:field.field_key %}
+                        {% include "assessments/_field_input.html" with name=field_name field=field %}
+                        {% endwith %}
                     </div>
                     {% endfor %}
                 </div>
@@ -103,6 +112,7 @@
                     <textarea name="clinic_{{ clinic.pk }}_notes" class="form-input" rows="1"></textarea>
                 </div>
             </div>
+            {% endwith %}
             {% endfor %}
         </div>
     </div>
